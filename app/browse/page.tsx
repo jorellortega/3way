@@ -88,49 +88,48 @@ export default function BrowsePage() {
                   <List className="h-4 w-4" />
                 </TabsTrigger>
               </TabsList>
+              <TabsContent value="grid" className="mt-0">
+                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  {Array.from({ length: 12 }).map((_, i) => (
+                    <Link key={i} href={`/content/${i + 1}`} className="group">
+                      <div className="overflow-hidden rounded-lg border border-purple-500/30 bg-gray-900 shadow-[0_0_15px_rgba(168,85,247,0.15)]">
+                        <div className="relative aspect-[4/3] w-full overflow-hidden">
+                          <Image
+                            src={`/placeholder.svg?height=300&width=400`}
+                            width={400}
+                            height={300}
+                            alt={`Content ${i + 1}`}
+                            className="h-full w-full object-cover transition-all duration-300 group-hover:scale-105"
+                          />
+                          {/* Blurred overlay for other images */}
+                          {i % 3 !== 0 && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-black/50 backdrop-blur-md">
+                              <div className="rounded-full bg-purple-600 px-4 py-2 text-sm font-medium text-white">
+                                Subscribe to View
+                              </div>
+                            </div>
+                          )}
+                          {i % 4 === 0 && (
+                            <div className="absolute right-2 top-2 rounded-full bg-purple-600 px-2 py-1 text-xs font-medium text-white">
+                              Premium
+                            </div>
+                          )}
+                        </div>
+                        <div className="p-4">
+                          <h3 className="font-medium text-white">Digital Content Title {i + 1}</h3>
+                          <div className="mt-1 flex items-center justify-between">
+                            <p className="text-sm text-purple-200">By Creator Name</p>
+                            <p className="font-medium text-purple-400">$9.99</p>
+                          </div>
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </TabsContent>
             </Tabs>
           </div>
         </div>
-
-        <TabsContent value="grid" className="mt-0">
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {Array.from({ length: 12 }).map((_, i) => (
-              <Link key={i} href={`/content/${i + 1}`} className="group">
-                <div className="overflow-hidden rounded-lg border border-purple-500/30 bg-gray-900 shadow-[0_0_15px_rgba(168,85,247,0.15)]">
-                  <div className="relative aspect-[4/3] w-full overflow-hidden">
-                    <Image
-                      src={`/placeholder.svg?height=300&width=400`}
-                      width={400}
-                      height={300}
-                      alt={`Content ${i + 1}`}
-                      className="h-full w-full object-cover transition-all duration-300 group-hover:scale-105"
-                    />
-                    {/* Blurred overlay for other images */}
-                    {i % 3 !== 0 && (
-                      <div className="absolute inset-0 flex items-center justify-center bg-black/50 backdrop-blur-md">
-                        <div className="rounded-full bg-purple-600 px-4 py-2 text-sm font-medium text-white">
-                          Subscribe to View
-                        </div>
-                      </div>
-                    )}
-                    {i % 4 === 0 && (
-                      <div className="absolute right-2 top-2 rounded-full bg-purple-600 px-2 py-1 text-xs font-medium text-white">
-                        Premium
-                      </div>
-                    )}
-                  </div>
-                  <div className="p-4">
-                    <h3 className="font-medium text-white">Digital Content Title {i + 1}</h3>
-                    <div className="mt-1 flex items-center justify-between">
-                      <p className="text-sm text-purple-200">By Creator Name</p>
-                      <p className="font-medium text-purple-400">$9.99</p>
-                    </div>
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </TabsContent>
 
         <TabsContent value="list" className="mt-0">
           <div className="space-y-4">
