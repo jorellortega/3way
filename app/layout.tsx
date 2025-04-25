@@ -88,11 +88,11 @@ export default function RootLayout({
                 </div>
                 <div className="hidden flex-1 items-center justify-end md:flex">
                   <div className="relative w-full max-w-sm">
-                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-purple-300" />
+                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-blue-300" />
                     <Input
                       type="search"
                       placeholder="Search content..."
-                      className="w-full rounded-full bg-gray-900 border-purple-700 pl-8 text-purple-200 md:w-[300px] lg:w-[400px] focus-visible:ring-purple-500"
+                      className="w-full rounded-full bg-gray-900 border-blue-700 pl-8 text-blue-200 md:w-[300px] lg:w-[400px] focus-visible:ring-blue-500"
                     />
                   </div>
                 </div>
