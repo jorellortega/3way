@@ -73,8 +73,8 @@ export default function BrowsePage() {
           </div>
           <div className="flex items-center gap-2">
             <p className="text-sm text-purple-200">Showing 1-24 of 256 results</p>
-            <Tabs defaultValue="grid" className="w-[120px]">
-              <TabsList className="grid h-8 w-full grid-cols-2 bg-gray-900 border-purple-700">
+            <Tabs defaultValue="grid" className="w-full">
+              <TabsList className="grid h-8 w-[120px] grid-cols-2 bg-gray-900 border-purple-700">
                 <TabsTrigger
                   value="grid"
                   className="h-8 w-8 p-0 data-[state=active]:bg-purple-800 data-[state=active]:text-white"
@@ -88,7 +88,7 @@ export default function BrowsePage() {
                   <List className="h-4 w-4" />
                 </TabsTrigger>
               </TabsList>
-              <TabsContent value="grid" className="mt-0">
+              <TabsContent value="grid" className="mt-6">
                 <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                   {Array.from({ length: 12 }).map((_, i) => (
                     <Link key={i} href={`/content/${i + 1}`} className="group">
@@ -127,58 +127,57 @@ export default function BrowsePage() {
                   ))}
                 </div>
               </TabsContent>
+              <TabsContent value="list" className="mt-6">
+                <div className="space-y-4">
+                  {Array.from({ length: 8 }).map((_, i) => (
+                    <Link key={i} href={`/content/${i + 1}`} className="group">
+                      <div className="flex overflow-hidden rounded-lg border border-purple-500/30 bg-gray-900 shadow-[0_0_15px_rgba(168,85,247,0.15)]">
+                        <div className="relative h-32 w-48 overflow-hidden sm:h-40 sm:w-64">
+                          <Image
+                            src={`/placeholder.svg?height=160&width=256`}
+                            width={256}
+                            height={160}
+                            alt={`Content ${i + 1}`}
+                            className="h-full w-full object-cover transition-all duration-300 group-hover:scale-105"
+                          />
+                          {/* Blurred overlay for other images */}
+                          {i % 3 !== 0 && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-black/50 backdrop-blur-md">
+                              <div className="rounded-full bg-purple-600 px-4 py-2 text-sm font-medium text-white">
+                                Subscribe to View
+                              </div>
+                            </div>
+                          )}
+                          {i % 4 === 0 && (
+                            <div className="absolute right-2 top-2 rounded-full bg-purple-600 px-2 py-1 text-xs font-medium text-white">
+                              Premium
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex flex-1 flex-col justify-between p-4">
+                          <div>
+                            <h3 className="font-medium text-white">Digital Content Title {i + 1}</h3>
+                            <p className="mt-1 text-sm text-purple-200">By Creator Name</p>
+                            <p className="mt-2 line-clamp-2 text-sm text-purple-200">
+                              This premium digital content features high-quality visuals perfect for your creative projects.
+                            </p>
+                          </div>
+                          <div className="mt-4 flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-purple-300">4.8 ★</span>
+                              <span className="text-xs text-purple-300">1.2k downloads</span>
+                            </div>
+                            <p className="font-medium text-purple-400">$9.99</p>
+                          </div>
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </TabsContent>
             </Tabs>
           </div>
         </div>
-
-        <TabsContent value="list" className="mt-0">
-          <div className="space-y-4">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <Link key={i} href={`/content/${i + 1}`} className="group">
-                <div className="flex overflow-hidden rounded-lg border border-purple-500/30 bg-gray-900 shadow-[0_0_15px_rgba(168,85,247,0.15)]">
-                  <div className="relative h-32 w-48 overflow-hidden sm:h-40 sm:w-64">
-                    <Image
-                      src={`/placeholder.svg?height=160&width=256`}
-                      width={256}
-                      height={160}
-                      alt={`Content ${i + 1}`}
-                      className="h-full w-full object-cover transition-all duration-300 group-hover:scale-105"
-                    />
-                    {/* Blurred overlay for other images */}
-                    {i % 3 !== 0 && (
-                      <div className="absolute inset-0 flex items-center justify-center bg-black/50 backdrop-blur-md">
-                        <div className="rounded-full bg-purple-600 px-4 py-2 text-sm font-medium text-white">
-                          Subscribe to View
-                        </div>
-                      </div>
-                    )}
-                    {i % 4 === 0 && (
-                      <div className="absolute right-2 top-2 rounded-full bg-purple-600 px-2 py-1 text-xs font-medium text-white">
-                        Premium
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex flex-1 flex-col justify-between p-4">
-                    <div>
-                      <h3 className="font-medium text-white">Digital Content Title {i + 1}</h3>
-                      <p className="mt-1 text-sm text-purple-200">By Creator Name</p>
-                      <p className="mt-2 line-clamp-2 text-sm text-purple-200">
-                        This premium digital content features high-quality visuals perfect for your creative projects.
-                      </p>
-                    </div>
-                    <div className="mt-4 flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-purple-300">4.8 ★</span>
-                        <span className="text-xs text-purple-300">1.2k downloads</span>
-                      </div>
-                      <p className="font-medium text-purple-400">$9.99</p>
-                    </div>
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </TabsContent>
 
         <div className="mt-8 flex justify-center">
           <nav className="flex items-center gap-1">
