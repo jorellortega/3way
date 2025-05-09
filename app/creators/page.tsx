@@ -8,26 +8,26 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 export default function CreatorsPage() {
   return (
-    <div className="flex min-h-screen flex-col bg-gradient-to-br from-gray-950 via-blue-950/80 to-gray-950">
+    <div className="flex min-h-screen flex-col bg-gradient-to-br from-paradisePink via-paradiseGold to-paradiseWhite">
       <div className="container px-4 py-8 md:px-6 md:py-12">
         <div className="mb-8 flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight text-white">Featured Creators</h1>
-            <p className="text-blue-200">Discover and follow talented content creators</p>
+            <h1 className="text-3xl font-bold tracking-tight text-paradisePink">Featured Creators</h1>
+            <p className="text-paradiseWhite">Discover and follow talented content creators</p>
           </div>
           <div className="flex w-full items-center gap-2 md:w-auto">
             <div className="relative flex-1 md:w-[300px]">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-blue-300" />
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-paradiseGold" />
               <Input
                 type="search"
                 placeholder="Search creators..."
-                className="w-full rounded-full bg-gray-900 border-blue-700 pl-8 text-blue-200 focus-visible:ring-blue-500"
+                className="w-full rounded-full bg-paradiseWhite border-paradiseGold pl-8 text-paradiseBlack focus-visible:ring-paradisePink"
               />
             </div>
             <Button
               variant="outline"
               size="icon"
-              className="border-blue-700 bg-gray-900 text-blue-200 hover:bg-blue-900/50 hover:text-white"
+              className="border-paradiseGold bg-paradiseWhite text-paradisePink hover:bg-paradiseGold/20 hover:text-paradiseBlack"
             >
               <SlidersHorizontal className="h-4 w-4" />
               <span className="sr-only">Filter</span>
@@ -40,16 +40,16 @@ export default function CreatorsPage() {
             <Button
               variant="outline"
               size="sm"
-              className="h-8 gap-1 border-blue-700 bg-gray-900 text-blue-200 hover:bg-blue-900/50 hover:text-white"
+              className="h-8 gap-1 border-paradiseGold bg-paradiseWhite text-paradisePink hover:bg-paradiseGold/20 hover:text-paradiseBlack"
             >
               <Filter className="h-3.5 w-3.5" />
               Filters
             </Button>
             <Select defaultValue="all">
-              <SelectTrigger className="h-8 w-[150px] border-blue-700 bg-gray-900 text-blue-200 focus:ring-blue-500">
+              <SelectTrigger className="h-8 w-[150px] border-paradiseGold bg-paradiseWhite text-paradiseBlack focus:ring-paradisePink">
                 <SelectValue placeholder="Category" />
               </SelectTrigger>
-              <SelectContent className="bg-gray-900 border-blue-700 text-blue-200">
+              <SelectContent className="bg-paradiseWhite border-paradiseGold text-paradiseBlack">
                 <SelectItem value="all">All Categories</SelectItem>
                 <SelectItem value="photography">Photography</SelectItem>
                 <SelectItem value="videography">Videography</SelectItem>
@@ -58,10 +58,10 @@ export default function CreatorsPage() {
               </SelectContent>
             </Select>
             <Select defaultValue="popular">
-              <SelectTrigger className="h-8 w-[150px] border-blue-700 bg-gray-900 text-blue-200 focus:ring-blue-500">
+              <SelectTrigger className="h-8 w-[150px] border-paradiseGold bg-paradiseWhite text-paradiseBlack focus:ring-paradisePink">
                 <SelectValue placeholder="Sort by" />
               </SelectTrigger>
-              <SelectContent className="bg-gray-900 border-blue-700 text-blue-200">
+              <SelectContent className="bg-paradiseWhite border-paradiseGold text-paradiseBlack">
                 <SelectItem value="popular">Most Popular</SelectItem>
                 <SelectItem value="newest">Newest</SelectItem>
                 <SelectItem value="rating">Highest Rated</SelectItem>
@@ -69,13 +69,13 @@ export default function CreatorsPage() {
               </SelectContent>
             </Select>
           </div>
-          <p className="text-sm text-blue-200">Showing 1-12 of 48 creators</p>
+          <p className="text-sm text-paradiseWhite">Showing 1-12 of 48 creators</p>
         </div>
 
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {Array.from({ length: 12 }).map((_, i) => (
             <Link key={i} href={`/creators/${i + 1}`} className="group">
-              <div className="overflow-hidden rounded-lg border border-blue-500/30 bg-gray-900 shadow-[0_0_15px_rgba(59,130,246,0.15)]">
+              <div className="overflow-hidden rounded-lg border border-paradiseGold/30 bg-paradiseWhite shadow-[0_0_15px_rgba(249,200,70,0.15)]">
                 <div className="relative aspect-[4/3] w-full overflow-hidden">
                   <Image
                     src={`/placeholder-user.jpg`}
@@ -85,23 +85,23 @@ export default function CreatorsPage() {
                     className="h-full w-full object-cover transition-all duration-300 group-hover:scale-105"
                   />
                   {i % 3 === 0 && (
-                    <div className="absolute right-2 top-2 rounded-full bg-blue-600 px-2 py-1 text-xs font-medium text-white">
+                    <div className="absolute right-2 top-2 rounded-full bg-paradisePink px-2 py-1 text-xs font-medium text-paradiseWhite">
                       Featured
                     </div>
                   )}
                 </div>
                 <div className="p-4">
                   <div className="flex items-center justify-between">
-                    <h3 className="font-medium text-white">Creator Name {i + 1}</h3>
+                    <h3 className="font-medium text-paradisePink">Creator Name {i + 1}</h3>
                     <div className="flex items-center gap-1">
-                      <Star className="h-4 w-4 text-yellow-400" />
-                      <span className="text-sm text-blue-200">4.8</span>
+                      <Star className="h-4 w-4 text-paradiseGold" />
+                      <span className="text-sm text-paradiseGold">4.8</span>
                     </div>
                   </div>
-                  <p className="mt-1 text-sm text-blue-200">Photography & Videography</p>
+                  <p className="mt-1 text-sm text-paradiseGold">Photography & Videography</p>
                   <div className="mt-2 flex items-center justify-between text-sm">
-                    <p className="text-blue-200">128 items</p>
-                    <p className="text-blue-400">2.4k followers</p>
+                    <p className="text-paradiseGold">128 items</p>
+                    <p className="text-paradisePink">2.4k followers</p>
                   </div>
                 </div>
               </div>
@@ -111,7 +111,7 @@ export default function CreatorsPage() {
 
         <div className="mt-8 flex justify-center">
           <nav className="flex items-center gap-1">
-            <Button variant="outline" size="icon" disabled className="border-blue-700 bg-gray-900 text-blue-200">
+            <Button variant="outline" size="icon" disabled className="border-paradiseGold bg-paradiseWhite text-paradisePink">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="24"
@@ -131,35 +131,35 @@ export default function CreatorsPage() {
             <Button
               variant="outline"
               size="sm"
-              className="h-8 w-8 p-0 border-blue-700 bg-gray-900 text-blue-200 hover:bg-blue-900/50 hover:text-white"
+              className="h-8 w-8 p-0 border-paradiseGold bg-paradiseWhite text-paradisePink hover:bg-paradiseGold/20 hover:text-paradiseBlack"
             >
               1
             </Button>
             <Button
               variant="outline"
               size="sm"
-              className="h-8 w-8 p-0 border-blue-700 bg-gray-900 text-blue-200 hover:bg-blue-900/50 hover:text-white"
+              className="h-8 w-8 p-0 border-paradiseGold bg-paradiseWhite text-paradisePink hover:bg-paradiseGold/20 hover:text-paradiseBlack"
             >
               2
             </Button>
             <Button
               variant="outline"
               size="sm"
-              className="h-8 w-8 p-0 border-blue-700 bg-gray-900 text-blue-200 hover:bg-blue-900/50 hover:text-white"
+              className="h-8 w-8 p-0 border-paradiseGold bg-paradiseWhite text-paradisePink hover:bg-paradiseGold/20 hover:text-paradiseBlack"
             >
               3
             </Button>
             <Button
               variant="outline"
               size="sm"
-              className="h-8 w-8 p-0 border-blue-700 bg-gray-900 text-blue-200 hover:bg-blue-900/50 hover:text-white"
+              className="h-8 w-8 p-0 border-paradiseGold bg-paradiseWhite text-paradisePink hover:bg-paradiseGold/20 hover:text-paradiseBlack"
             >
               4
             </Button>
             <Button
               variant="outline"
               size="icon"
-              className="border-blue-700 bg-gray-900 text-blue-200 hover:bg-blue-900/50 hover:text-white"
+              className="border-paradiseGold bg-paradiseWhite text-paradisePink hover:bg-paradiseGold/20 hover:text-paradiseBlack"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"

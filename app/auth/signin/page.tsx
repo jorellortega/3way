@@ -12,7 +12,7 @@ export default function SignInPage() {
         <div className="mx-auto grid w-full max-w-sm gap-6">
           <div className="flex flex-col items-center space-y-2 text-center">
             <div className="flex items-center gap-2 text-2xl font-bold">
-              <span className="text-purple-400">Digital</span>Market
+              <span className="text-paradiseGold">Paradise</span><span className="text-paradisePink">Baddies</span>
             </div>
             <h1 className="text-2xl font-bold text-white">Sign in to your account</h1>
             <p className="text-sm text-purple-200">Enter your email and password to access your account</p>

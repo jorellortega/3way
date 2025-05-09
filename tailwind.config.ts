@@ -65,6 +65,10 @@ const config = {
           900: "#4c1d95",
           950: "#2e1065",
         },
+        paradisePink: "#EC268F",
+        paradiseGold: "#F9C846",
+        paradiseBlack: "#111111",
+        paradiseWhite: "#FFFFFF",
       },
       backgroundImage: {
         "grid-white":

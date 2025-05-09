@@ -13,7 +13,7 @@ import { Suspense } from "react"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata = {
-  title: "Digital Content Marketplace",
+  title: "Paradise Baddies",
   description: "Premium digital content marketplace for pictures and videos",
     generator: 'v0.dev'
 }
@@ -45,7 +45,7 @@ export default function RootLayout({
                     <SheetContent side="left" className="w-[300px] sm:w-[400px] border-purple-700 bg-gray-950">
                       <nav className="grid gap-6 text-lg font-medium">
                         <Link href="/" className="flex items-center gap-2 text-lg font-semibold">
-                          <span className="text-purple-400">Digital</span>Market
+                          <span className="text-paradiseGold">Paradise</span><span className="text-paradisePink">Baddies</span>
                         </Link>
                         <Link href="/" className="text-purple-200 hover:text-purple-400">
                           Home
@@ -66,7 +66,7 @@ export default function RootLayout({
                     </SheetContent>
                   </Sheet>
                   <Link href="/" className="flex items-center gap-2 text-lg font-semibold md:text-2xl">
-                    <span className="text-purple-400">Digital</span>Market
+                    <span className="text-paradiseGold">Paradise</span><span className="text-paradisePink">Baddies</span>
                   </Link>
                   <nav className="hidden gap-6 md:flex">
                     <Link href="/" className="text-sm font-medium text-purple-200 hover:text-purple-400">
@@ -144,9 +144,9 @@ export default function RootLayout({
               <div className="container flex flex-col items-center justify-between gap-4 px-4 text-center md:flex-row md:px-6 md:text-left">
                 <div className="flex flex-col items-center gap-4 md:flex-row">
                   <Link href="/" className="flex items-center gap-2 text-lg font-semibold">
-                    <span className="text-purple-400">Digital</span>Market
+                    <span className="text-paradiseGold">Paradise</span><span className="text-paradisePink">Baddies</span>
                   </Link>
-                  <p className="text-sm text-purple-200">© 2025 DigitalMarket. All rights reserved.</p>
+                  <p className="text-sm text-purple-200">© 2025 Paradise Baddies. All rights reserved.</p>
                 </div>
                 <div className="flex gap-4">
                   <Link href="#" className="text-sm text-purple-200 hover:text-purple-400">
