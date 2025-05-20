@@ -15,7 +15,7 @@ export default function SubscriptionsPage() {
 
       <div className="mx-auto mt-12 grid max-w-5xl gap-8 md:grid-cols-3">
         {/* Basic Plan */}
-        <div className="flex flex-col rounded-lg border border-paradiseGold bg-paradiseWhite p-6 shadow-sm">
+        <div className="flex flex-col rounded-lg border border-paradiseGold p-6 shadow-sm" style={{ backgroundColor: '#141414' }}>
           <div className="mb-4">
             <h3 className="text-xl font-bold text-paradisePink">Basic</h3>
             <p className="text-sm text-paradiseGold">For casual browsers</p>
@@ -53,7 +53,7 @@ export default function SubscriptionsPage() {
         </div>
 
         {/* Premium Plan */}
-        <div className="relative flex flex-col rounded-lg border border-paradiseGold bg-paradiseWhite p-6 shadow-md">
+        <div className="relative flex flex-col rounded-lg border border-paradiseGold p-6 shadow-md" style={{ backgroundColor: '#141414' }}>
           <div className="absolute -top-4 left-0 right-0 mx-auto w-fit rounded-full bg-paradisePink px-3 py-1 text-xs font-semibold text-paradiseWhite">
             Most Popular
           </div>
@@ -98,7 +98,7 @@ export default function SubscriptionsPage() {
         </div>
 
         {/* Pro Plan */}
-        <div className="flex flex-col rounded-lg border border-paradiseGold bg-paradiseWhite p-6 shadow-sm">
+        <div className="flex flex-col rounded-lg border border-paradiseGold p-6 shadow-sm" style={{ backgroundColor: '#141414' }}>
           <div className="mb-4">
             <h3 className="text-xl font-bold text-paradisePink">Pro</h3>
             <p className="text-sm text-paradiseGold">For professionals</p>

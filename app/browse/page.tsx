@@ -97,7 +97,7 @@ export default function BrowsePage() {
                 <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                   {Array.from({ length: 12 }).map((_, i) => (
                     <Link key={i} href={`/content/${i + 1}`} className="group">
-                      <div className="overflow-hidden rounded-lg border border-paradiseGold/30 bg-paradiseWhite shadow-[0_0_15px_rgba(249,200,70,0.15)]">
+                      <div className="overflow-hidden rounded-lg border border-paradiseGold/30 shadow-[0_0_15px_rgba(249,200,70,0.15)]" style={{ backgroundColor: '#141414' }}>
                         <div className="relative aspect-[4/3] w-full overflow-hidden">
                           <Image
                             src={`/placeholder.svg?height=300&width=400`}
@@ -176,7 +176,7 @@ export default function BrowsePage() {
                 <div className="space-y-4">
                   {Array.from({ length: 8 }).map((_, i) => (
                     <Link key={i} href={`/content/${i + 1}`} className="group">
-                      <div className="flex overflow-hidden rounded-lg border border-paradiseGold/30 bg-paradiseWhite shadow-[0_0_15px_rgba(249,200,70,0.15)]">
+                      <div className="flex overflow-hidden rounded-lg border border-paradiseGold/30 shadow-[0_0_15px_rgba(249,200,70,0.15)]" style={{ backgroundColor: '#141414' }}>
                         <div className="relative h-32 w-48 overflow-hidden sm:h-40 sm:w-64">
                           <Image
                             src={`/placeholder.svg?height=160&width=256`}

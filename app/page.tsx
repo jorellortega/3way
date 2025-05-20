@@ -1,6 +1,6 @@
 import Link from "next/link"
 import Image from "next/image"
-import { ArrowRight, Crown, Star, TrendingUp } from "lucide-react"
+import { ArrowRight, Crown, Star, TrendingUp, ShoppingCart } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 
@@ -103,30 +103,41 @@ export default function Home() {
           </div>
           <div className="mx-auto grid max-w-5xl grid-cols-1 gap-6 py-12 sm:grid-cols-2 md:grid-cols-3 lg:gap-8">
             {[1, 2, 3, 4, 5, 6].map((item) => (
-              <Link
-                key={item}
-                href={`/content/${item}`}
-                className="group relative overflow-hidden rounded-lg border border-paradiseGold shadow-[0_0_15px_rgba(249,200,70,0.15)]"
-              >
-                <div className="aspect-[4/3] w-full overflow-hidden rounded-lg bg-paradiseWhite">
-                  <Image
-                    src={`/placeholder.svg?height=300&width=400`}
-                    width={400}
-                    height={300}
-                    alt={`Featured content ${item}`}
-                    className="h-full w-full object-cover transition-all duration-300 group-hover:scale-105"
-                  />
-                </div>
-                <div className="absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-paradiseBlack/80 to-transparent p-4 text-paradiseWhite opacity-0 transition-opacity group-hover:opacity-100">
-                  <h3 className="font-medium">Premium Content Title</h3>
-                  <p className="text-sm text-paradiseGold">By Creator Name</p>
-                </div>
-                {item % 2 === 0 && (
-                  <div className="absolute right-2 top-2 rounded-full bg-paradisePink px-2 py-1 text-xs font-medium text-paradiseWhite">
-                    Premium
+              <div key={item} className="relative overflow-hidden rounded-lg border border-paradiseGold shadow-[0_0_15px_rgba(249,200,70,0.15)]" style={{ backgroundColor: '#141414' }}>
+                <Link
+                  href={`/content/${item}`}
+                  className="group block flex-1"
+                >
+                  <div className="aspect-[4/3] w-full overflow-hidden rounded-lg bg-paradiseWhite">
+                    <Image
+                      src={`/placeholder.svg?height=300&width=400`}
+                      width={400}
+                      height={300}
+                      alt={`Featured content ${item}`}
+                      className="h-full w-full object-cover transition-all duration-300 group-hover:scale-105"
+                    />
                   </div>
-                )}
-              </Link>
+                  <div className="absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-paradiseBlack/80 to-transparent p-4 text-paradiseWhite opacity-0 transition-opacity group-hover:opacity-100">
+                    <h3 className="font-medium">Premium Content Title</h3>
+                    <p className="text-sm text-paradiseGold">By Creator Name</p>
+                  </div>
+                  {item % 2 === 0 && (
+                    <div className="absolute right-2 top-2 rounded-full bg-paradisePink px-2 py-1 text-xs font-medium text-paradiseWhite">
+                      Premium
+                    </div>
+                  )}
+                </Link>
+                <div className="flex gap-2 p-4 pt-2">
+                  <Button size="sm" className="flex-1 min-w-0 gap-1 bg-paradisePink hover:bg-paradisePink/90 text-white font-bold text-sm px-2 py-1 truncate">
+                    <ShoppingCart className="h-4 w-4" />
+                    <span className="truncate">Add to Cart</span>
+                  </Button>
+                  <Button size="sm" className="flex-1 min-w-0 gap-1 bg-paradiseGold hover:bg-paradiseGold/90 text-paradiseBlack font-bold text-sm px-2 py-1 truncate">
+                    <ShoppingCart className="h-4 w-4" />
+                    <span className="truncate">Buy Now</span>
+                  </Button>
+                </div>
+              </div>
             ))}
           </div>
           <div className="flex justify-center">

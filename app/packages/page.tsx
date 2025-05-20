@@ -34,7 +34,7 @@ export default function PackagesPage() {
         <TabsContent value="all" className="mt-0">
           <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
             {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="overflow-hidden rounded-lg border border-paradiseGold/30 bg-paradiseWhite shadow-[0_0_15px_rgba(249,200,70,0.15)]">
+              <div key={i} className="overflow-hidden rounded-lg border border-paradiseGold/30 shadow-[0_0_15px_rgba(249,200,70,0.15)]" style={{ backgroundColor: '#141414' }}>
                 <div className="relative">
                   <div className="aspect-[16/9] w-full overflow-hidden">
                     <Image
@@ -160,7 +160,7 @@ export default function PackagesPage() {
         <TabsContent value="photos" className="mt-0">
           <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
             {[0, 1, 4].map((i) => (
-              <div key={i} className="overflow-hidden rounded-lg border border-paradiseGold/30 bg-paradiseWhite shadow-[0_0_15px_rgba(249,200,70,0.15)]">
+              <div key={i} className="overflow-hidden rounded-lg border border-paradiseGold/30 shadow-[0_0_15px_rgba(249,200,70,0.15)]" style={{ backgroundColor: '#141414' }}>
                 <div className="relative">
                   <div className="aspect-[16/9] w-full overflow-hidden">
                     <Image
@@ -286,7 +286,7 @@ export default function PackagesPage() {
         <TabsContent value="videos" className="mt-0">
           <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
             {[2, 5].map((i) => (
-              <div key={i} className="overflow-hidden rounded-lg border border-paradiseGold/30 bg-paradiseWhite shadow-[0_0_15px_rgba(249,200,70,0.15)]">
+              <div key={i} className="overflow-hidden rounded-lg border border-paradiseGold/30 shadow-[0_0_15px_rgba(249,200,70,0.15)]" style={{ backgroundColor: '#141414' }}>
                 <div className="relative">
                   <div className="aspect-[16/9] w-full overflow-hidden">
                     <Image
@@ -412,7 +412,7 @@ export default function PackagesPage() {
         <TabsContent value="mixed" className="mt-0">
           <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
             {[3].map((i) => (
-              <div key={i} className="overflow-hidden rounded-lg border border-paradiseGold/30 bg-paradiseWhite shadow-[0_0_15px_rgba(249,200,70,0.15)]">
+              <div key={i} className="overflow-hidden rounded-lg border border-paradiseGold/30 shadow-[0_0_15px_rgba(249,200,70,0.15)]" style={{ backgroundColor: '#141414' }}>
                 <div className="relative">
                   <div className="aspect-[16/9] w-full overflow-hidden">
                     <Image
