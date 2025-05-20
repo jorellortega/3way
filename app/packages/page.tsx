@@ -1,11 +1,17 @@
+'use client';
 import Link from "next/link"
 import Image from "next/image"
 import { Check, Download, ShoppingCart } from "lucide-react"
+import React, { useContext, useState } from "react";
+import { CartContext } from "../cart-context";
 
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 export default function PackagesPage() {
+  const { addToCart } = useContext(CartContext);
+  const [addedIndex, setAddedIndex] = useState<number | null>(null);
+
   return (
     <div className="container px-4 py-12 md:px-6 md:py-24 bg-gradient-to-br from-paradisePink via-paradiseGold to-paradiseWhite">
       <div className="mx-auto max-w-3xl text-center">
@@ -95,9 +101,49 @@ export default function PackagesPage() {
                     </li>
                   </ul>
                   <div className="flex gap-3">
-                    <Button className="flex-1 gap-2 bg-paradisePink hover:bg-paradiseGold text-paradiseWhite">
+                    <Button
+                      className="flex-1 gap-2 bg-paradisePink hover:bg-paradiseGold text-paradiseWhite"
+                      onClick={() => {
+                        addToCart({
+                          id: i + 1,
+                          name: [
+                            "Nature Collection",
+                            "Urban Landscapes",
+                            "Abstract Art",
+                            "Minimalist Design",
+                            "Vintage Style",
+                            "Modern Tech",
+                          ][i],
+                          price: [49.99, 69.99, 39.99, 89.99, 59.99, 79.99][i],
+                        });
+                        setAddedIndex(i);
+                        setTimeout(() => setAddedIndex(null), 1200);
+                      }}
+                    >
                       <ShoppingCart className="h-4 w-4" />
-                      Add to Cart
+                      {addedIndex === i ? "Added!" : "Add to Cart"}
+                    </Button>
+                    <Button
+                      className="flex-1 gap-2 bg-paradiseGold hover:bg-paradisePink text-paradiseBlack font-semibold"
+                      onClick={() => {
+                        if (typeof window !== 'undefined') {
+                          localStorage.setItem('cart', JSON.stringify([{
+                            id: i + 1,
+                            name: [
+                              "Nature Collection",
+                              "Urban Landscapes",
+                              "Abstract Art",
+                              "Minimalist Design",
+                              "Vintage Style",
+                              "Modern Tech",
+                            ][i],
+                            price: [49.99, 69.99, 39.99, 89.99, 59.99, 79.99][i],
+                          }]));
+                          window.location.href = '/checkout';
+                        }
+                      }}
+                    >
+                      Buy Now
                     </Button>
                     <Link href={`/packages/${i + 1}`} className="flex-1 border-paradiseGold text-paradisePink hover:bg-paradiseGold/10">
                       <Button variant="outline" className="w-full">
@@ -181,9 +227,49 @@ export default function PackagesPage() {
                     </li>
                   </ul>
                   <div className="flex gap-3">
-                    <Button className="flex-1 gap-2 bg-paradisePink hover:bg-paradiseGold text-paradiseWhite">
+                    <Button
+                      className="flex-1 gap-2 bg-paradisePink hover:bg-paradiseGold text-paradiseWhite"
+                      onClick={() => {
+                        addToCart({
+                          id: i + 1,
+                          name: [
+                            "Nature Collection",
+                            "Urban Landscapes",
+                            "Abstract Art",
+                            "Minimalist Design",
+                            "Vintage Style",
+                            "Modern Tech",
+                          ][i],
+                          price: [49.99, 69.99, 39.99, 89.99, 59.99, 79.99][i],
+                        });
+                        setAddedIndex(i);
+                        setTimeout(() => setAddedIndex(null), 1200);
+                      }}
+                    >
                       <ShoppingCart className="h-4 w-4" />
-                      Add to Cart
+                      {addedIndex === i ? "Added!" : "Add to Cart"}
+                    </Button>
+                    <Button
+                      className="flex-1 gap-2 bg-paradiseGold hover:bg-paradisePink text-paradiseBlack font-semibold"
+                      onClick={() => {
+                        if (typeof window !== 'undefined') {
+                          localStorage.setItem('cart', JSON.stringify([{
+                            id: i + 1,
+                            name: [
+                              "Nature Collection",
+                              "Urban Landscapes",
+                              "Abstract Art",
+                              "Minimalist Design",
+                              "Vintage Style",
+                              "Modern Tech",
+                            ][i],
+                            price: [49.99, 69.99, 39.99, 89.99, 59.99, 79.99][i],
+                          }]));
+                          window.location.href = '/checkout';
+                        }
+                      }}
+                    >
+                      Buy Now
                     </Button>
                     <Link href={`/packages/${i + 1}`} className="flex-1 border-paradiseGold text-paradisePink hover:bg-paradiseGold/10">
                       <Button variant="outline" className="w-full">
@@ -267,9 +353,49 @@ export default function PackagesPage() {
                     </li>
                   </ul>
                   <div className="flex gap-3">
-                    <Button className="flex-1 gap-2 bg-paradisePink hover:bg-paradiseGold text-paradiseWhite">
+                    <Button
+                      className="flex-1 gap-2 bg-paradisePink hover:bg-paradiseGold text-paradiseWhite"
+                      onClick={() => {
+                        addToCart({
+                          id: i + 1,
+                          name: [
+                            "Nature Collection",
+                            "Urban Landscapes",
+                            "Abstract Art",
+                            "Minimalist Design",
+                            "Vintage Style",
+                            "Modern Tech",
+                          ][i],
+                          price: [49.99, 69.99, 39.99, 89.99, 59.99, 79.99][i],
+                        });
+                        setAddedIndex(i);
+                        setTimeout(() => setAddedIndex(null), 1200);
+                      }}
+                    >
                       <ShoppingCart className="h-4 w-4" />
-                      Add to Cart
+                      {addedIndex === i ? "Added!" : "Add to Cart"}
+                    </Button>
+                    <Button
+                      className="flex-1 gap-2 bg-paradiseGold hover:bg-paradisePink text-paradiseBlack font-semibold"
+                      onClick={() => {
+                        if (typeof window !== 'undefined') {
+                          localStorage.setItem('cart', JSON.stringify([{
+                            id: i + 1,
+                            name: [
+                              "Nature Collection",
+                              "Urban Landscapes",
+                              "Abstract Art",
+                              "Minimalist Design",
+                              "Vintage Style",
+                              "Modern Tech",
+                            ][i],
+                            price: [49.99, 69.99, 39.99, 89.99, 59.99, 79.99][i],
+                          }]));
+                          window.location.href = '/checkout';
+                        }
+                      }}
+                    >
+                      Buy Now
                     </Button>
                     <Link href={`/packages/${i + 1}`} className="flex-1 border-paradiseGold text-paradisePink hover:bg-paradiseGold/10">
                       <Button variant="outline" className="w-full">
@@ -353,9 +479,49 @@ export default function PackagesPage() {
                     </li>
                   </ul>
                   <div className="flex gap-3">
-                    <Button className="flex-1 gap-2 bg-paradisePink hover:bg-paradiseGold text-paradiseWhite">
+                    <Button
+                      className="flex-1 gap-2 bg-paradisePink hover:bg-paradiseGold text-paradiseWhite"
+                      onClick={() => {
+                        addToCart({
+                          id: i + 1,
+                          name: [
+                            "Nature Collection",
+                            "Urban Landscapes",
+                            "Abstract Art",
+                            "Minimalist Design",
+                            "Vintage Style",
+                            "Modern Tech",
+                          ][i],
+                          price: [49.99, 69.99, 39.99, 89.99, 59.99, 79.99][i],
+                        });
+                        setAddedIndex(i);
+                        setTimeout(() => setAddedIndex(null), 1200);
+                      }}
+                    >
                       <ShoppingCart className="h-4 w-4" />
-                      Add to Cart
+                      {addedIndex === i ? "Added!" : "Add to Cart"}
+                    </Button>
+                    <Button
+                      className="flex-1 gap-2 bg-paradiseGold hover:bg-paradisePink text-paradiseBlack font-semibold"
+                      onClick={() => {
+                        if (typeof window !== 'undefined') {
+                          localStorage.setItem('cart', JSON.stringify([{
+                            id: i + 1,
+                            name: [
+                              "Nature Collection",
+                              "Urban Landscapes",
+                              "Abstract Art",
+                              "Minimalist Design",
+                              "Vintage Style",
+                              "Modern Tech",
+                            ][i],
+                            price: [49.99, 69.99, 39.99, 89.99, 59.99, 79.99][i],
+                          }]));
+                          window.location.href = '/checkout';
+                        }
+                      }}
+                    >
+                      Buy Now
                     </Button>
                     <Link href={`/packages/${i + 1}`} className="flex-1 border-paradiseGold text-paradisePink hover:bg-paradiseGold/10">
                       <Button variant="outline" className="w-full">

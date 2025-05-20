@@ -1,315 +1,178 @@
-import Link from "next/link"
-import Image from "next/image"
-import { ArrowRight, BarChart, Clock, CreditCard, Download, Heart, History, Package, Settings, ShoppingCart, Star, User, Users } from "lucide-react"
+import React from "react";
+import { User, Download, ShoppingCart, Heart, Star, Edit, CreditCard, Settings, ArrowRight, Upload } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
 
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-
-export default function DashboardPage() {
+export default function Dashboard() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-blue-950/80 to-gray-950">
-      <div className="container px-4 py-8 md:px-6 md:py-12">
-        <div className="flex flex-col gap-8 md:flex-row">
-          {/* Sidebar */}
-          <aside className="md:w-64">
-            <Card className="border-blue-500/30 bg-gray-900/60 shadow-[0_0_15px_rgba(59,130,246,0.15)]">
-              <CardHeader>
-                <div className="flex items-center gap-3">
-                  <div className="relative h-10 w-10 overflow-hidden rounded-full">
-                    <Image
-                      src="/placeholder.svg?height=40&width=40"
-                      width={40}
-                      height={40}
-                      alt="User avatar"
-                      className="h-full w-full object-cover"
-                    />
-                  </div>
-                  <div>
-                    <CardTitle className="text-white">John Doe</CardTitle>
-                    <CardDescription className="text-blue-300">Premium Subscriber</CardDescription>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="p-0">
-                <nav className="grid gap-1 px-2 text-sm">
-                  <Link
-                    href="/dashboard"
-                    className="flex items-center gap-3 rounded-md bg-blue-900/50 px-3 py-2 text-blue-100 transition-colors hover:text-blue-50"
-                  >
-                    <User className="h-4 w-4" />
-                    Account Overview
-                  </Link>
-                  <Link
-                    href="/dashboard/purchases"
-                    className="flex items-center gap-3 rounded-md px-3 py-2 text-blue-200 transition-colors hover:bg-blue-900/30 hover:text-blue-50"
-                  >
-                    <ShoppingCart className="h-4 w-4" />
-                    Purchases
-                  </Link>
-                  <Link
-                    href="/dashboard/downloads"
-                    className="flex items-center gap-3 rounded-md px-3 py-2 text-blue-200 transition-colors hover:bg-blue-900/30 hover:text-blue-50"
-                  >
-                    <Download className="h-4 w-4" />
-                    Downloads
-                  </Link>
-                  <Link
-                    href="/dashboard/favorites"
-                    className="flex items-center gap-3 rounded-md px-3 py-2 text-blue-200 transition-colors hover:bg-blue-900/30 hover:text-blue-50"
-                  >
-                    <Heart className="h-4 w-4" />
-                    Favorites
-                  </Link>
-                  <Link
-                    href="/dashboard/subscription"
-                    className="flex items-center gap-3 rounded-md px-3 py-2 text-blue-200 transition-colors hover:bg-blue-900/30 hover:text-blue-50"
-                  >
-                    <CreditCard className="h-4 w-4" />
-                    Subscription
-                  </Link>
-                  <Link
-                    href="/dashboard/history"
-                    className="flex items-center gap-3 rounded-md px-3 py-2 text-blue-200 transition-colors hover:bg-blue-900/30 hover:text-blue-50"
-                  >
-                    <History className="h-4 w-4" />
-                    History
-                  </Link>
-                  <Link
-                    href="/dashboard/settings"
-                    className="flex items-center gap-3 rounded-md px-3 py-2 text-blue-200 transition-colors hover:bg-blue-900/30 hover:text-blue-50"
-                  >
-                    <Settings className="h-4 w-4" />
-                    Settings
-                  </Link>
-                </nav>
-              </CardContent>
-              <CardFooter className="flex flex-col border-t border-blue-800/30 px-6 py-4">
-                <div className="mb-2 text-sm text-blue-200">Current Plan</div>
-                <div className="flex items-center justify-between">
-                  <div className="font-semibold text-white">Premium</div>
-                  <Link href="/dashboard/subscription">
-                    <Button variant="link" className="h-auto p-0 text-blue-400 hover:text-blue-300">
-                      Manage
-                    </Button>
-                  </Link>
-                </div>
-                <div className="mt-1 text-xs text-blue-300">Renews on Nov 15, 2025</div>
-              </CardFooter>
-            </Card>
-          </aside>
+    <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-paradisePink via-paradiseGold to-paradiseWhite p-4">
+      <div className="w-full max-w-4xl space-y-8">
+        {/* User Profile Card */}
+        <div className="flex flex-col sm:flex-row items-center gap-6 rounded-2xl bg-paradiseWhite bg-opacity-90 p-6 shadow-xl">
+          <div className="relative h-20 w-20 overflow-hidden rounded-full border-4 border-paradiseGold">
+            <Image src="/avatar-placeholder.png" alt="User avatar" fill className="object-cover" />
+          </div>
+          <div className="flex-1 text-center sm:text-left">
+            <div className="text-2xl font-bold text-paradisePink">Jane Doe</div>
+            <div className="text-paradiseBlack/80">jane.doe@email.com</div>
+            <button className="mt-2 inline-flex items-center gap-1 rounded bg-paradisePink px-3 py-1 text-sm font-semibold text-paradiseWhite hover:bg-paradiseGold hover:text-paradiseBlack transition">
+              <Edit className="h-4 w-4" /> Edit Profile
+            </button>
+          </div>
+          <div className="hidden sm:block">
+            <Link href="/settings" className="inline-flex items-center gap-1 text-paradiseGold hover:text-paradisePink font-semibold">
+              <Settings className="h-5 w-5" /> Settings
+            </Link>
+          </div>
+        </div>
 
-          {/* Main content */}
-          <main className="flex-1">
-            <h1 className="mb-6 text-2xl font-bold text-white md:text-3xl">Account Overview</h1>
+        {/* Subscription Status */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 rounded-xl bg-paradiseGold/90 p-6 shadow-md">
+          <div>
+            <div className="text-lg font-bold text-paradiseBlack">Premium Plan</div>
+            <div className="text-paradiseBlack/80">Renews on Nov 15, 2025</div>
+          </div>
+          <button className="inline-flex items-center gap-1 rounded bg-paradisePink px-4 py-2 text-sm font-semibold text-paradiseWhite hover:bg-paradiseBlack hover:text-paradiseGold transition">
+            <CreditCard className="h-4 w-4" /> Manage Subscription
+          </button>
+        </div>
 
-            {/* Stats */}
-            <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              <Card className="border-blue-500/30 bg-gray-900/60 shadow-[0_0_15px_rgba(59,130,246,0.15)]">
-                <CardHeader className="pb-2">
-                  <CardDescription className="text-blue-200">Downloads</CardDescription>
-                  <CardTitle className="text-2xl text-white">128</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-xs text-blue-300">
-                    <span className="font-medium text-blue-400">+12</span> this month
-                  </div>
-                </CardContent>
-              </Card>
-              <Card className="border-blue-500/30 bg-gray-900/60 shadow-[0_0_15px_rgba(59,130,246,0.15)]">
-                <CardHeader className="pb-2">
-                  <CardDescription className="text-blue-200">Purchases</CardDescription>
-                  <CardTitle className="text-2xl text-white">24</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-xs text-blue-300">
-                    <span className="font-medium text-blue-400">+3</span> this month
-                  </div>
-                </CardContent>
-              </Card>
-              <Card className="border-blue-500/30 bg-gray-900/60 shadow-[0_0_15px_rgba(59,130,246,0.15)]">
-                <CardHeader className="pb-2">
-                  <CardDescription className="text-blue-200">Favorites</CardDescription>
-                  <CardTitle className="text-2xl text-white">56</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-xs text-blue-300">
-                    <span className="font-medium text-blue-400">+8</span> this month
-                  </div>
-                </CardContent>
-              </Card>
-              <Card className="border-blue-500/30 bg-gray-900/60 shadow-[0_0_15px_rgba(59,130,246,0.15)]">
-                <CardHeader className="pb-2">
-                  <CardDescription className="text-blue-200">Following</CardDescription>
-                  <CardTitle className="text-2xl text-white">12</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-xs text-blue-300">
-                    <span className="font-medium text-blue-400">+2</span> this month
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+        {/* Quick Stats */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+          <div className="rounded-xl bg-paradisePink/90 p-6 text-center shadow-md">
+            <Download className="mx-auto mb-2 h-8 w-8 text-paradiseWhite" />
+            <div className="text-2xl font-bold text-paradiseWhite">128</div>
+            <div className="text-paradiseWhite/80">Downloads</div>
+          </div>
+          <div className="rounded-xl bg-paradiseGold/90 p-6 text-center shadow-md">
+            <ShoppingCart className="mx-auto mb-2 h-8 w-8 text-paradiseWhite" />
+            <div className="text-2xl font-bold text-paradiseWhite">24</div>
+            <div className="text-paradiseWhite/80">Purchases</div>
+          </div>
+          <div className="rounded-xl bg-paradiseBlack/90 p-6 text-center shadow-md">
+            <Heart className="mx-auto mb-2 h-8 w-8 text-paradisePink" />
+            <div className="text-2xl font-bold text-paradiseWhite">56</div>
+            <div className="text-paradiseWhite/80">Favorites</div>
+          </div>
+        </div>
 
-            {/* Recent Activity & Downloads */}
-            <Tabs defaultValue="recent" className="space-y-4">
-              <TabsList className="bg-gray-900 border-blue-700">
-                <TabsTrigger
-                  value="recent"
-                  className="data-[state=active]:bg-blue-800 data-[state=active]:text-white"
-                >
-                  Recent Activity
-                </TabsTrigger>
-                <TabsTrigger
-                  value="downloads"
-                  className="data-[state=active]:bg-blue-800 data-[state=active]:text-white"
-                >
-                  Recent Downloads
-                </TabsTrigger>
-              </TabsList>
+        {/* Quick Actions */}
+        <div className="flex flex-wrap gap-4 justify-center">
+          <Link href="/browse" className="inline-flex items-center gap-2 rounded bg-paradiseGold px-5 py-2 font-semibold text-paradiseBlack hover:bg-paradisePink hover:text-paradiseWhite transition">
+            <ArrowRight className="h-4 w-4" /> Browse Content
+          </Link>
+          <Link href="/favorites" className="inline-flex items-center gap-2 rounded bg-paradisePink px-5 py-2 font-semibold text-paradiseWhite hover:bg-paradiseGold hover:text-paradiseBlack transition">
+            <Heart className="h-4 w-4" /> View Favorites
+          </Link>
+          <Link href="/settings" className="inline-flex items-center gap-2 rounded bg-paradiseBlack px-5 py-2 font-semibold text-paradiseWhite hover:bg-paradiseGold hover:text-paradiseBlack transition">
+            <Settings className="h-4 w-4" /> Account Settings
+          </Link>
+        </div>
 
-              {/* Recent Activity Tab */}
-              <TabsContent value="recent" className="space-y-4">
-                <Card className="border-blue-500/30 bg-gray-900/60 shadow-[0_0_15px_rgba(59,130,246,0.15)]">
-                  <CardHeader>
-                    <CardTitle className="text-white">Recent Activity</CardTitle>
-                    <CardDescription className="text-blue-200">
-                      Your latest interactions on the platform
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {Array.from({ length: 5 }).map((_, i) => (
-                        <div
-                          key={i}
-                          className="flex items-start gap-4 border-b border-blue-800/30 pb-4 last:border-0"
-                        >
-                          <div className="rounded-md bg-blue-900/30 p-2">
-                            {
-                              [
-                                <Heart key="heart" className="h-4 w-4 text-blue-400" />,
-                                <Download key="download" className="h-4 w-4 text-blue-400" />,
-                                <ShoppingCart key="cart" className="h-4 w-4 text-blue-400" />,
-                                <Star key="star" className="h-4 w-4 text-blue-400" />,
-                                <Package key="package" className="h-4 w-4 text-blue-400" />,
-                              ][i]
-                            }
-                          </div>
-                          <div className="flex-1">
-                            <h4 className="font-medium text-white">
-                              {
-                                [
-                                  "Added item to favorites",
-                                  "Downloaded premium content",
-                                  "Purchased new item",
-                                  "Rated a creator",
-                                  "Subscribed to Premium plan",
-                                ][i]
-                              }
-                            </h4>
-                            <p className="text-sm text-blue-200">
-                              {
-                                [
-                                  "Abstract Digital Art Pack",
-                                  "City Nightscape Photo Collection",
-                                  "3D Model Asset Bundle",
-                                  "Creator: DigitalDesigner",
-                                  "Premium Monthly Subscription",
-                                ][i]
-                              }
-                            </p>
-                            <div className="mt-1 flex items-center text-xs text-blue-300">
-                              <Clock className="mr-1 h-3 w-3" />
-                              {["2 hours ago", "Yesterday", "2 days ago", "3 days ago", "1 week ago"][i]}
-                            </div>
-                          </div>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="text-blue-400 hover:bg-blue-900/30 hover:text-blue-300"
-                          >
-                            View
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                  <CardFooter>
-                    <Button
-                      variant="outline"
-                      className="w-full border-blue-700 text-blue-200 hover:bg-blue-900/50 hover:text-white"
-                    >
-                      View All Activity
-                    </Button>
-                  </CardFooter>
-                </Card>
-              </TabsContent>
+        {/* Recent Purchases */}
+        <div className="rounded-2xl bg-paradiseWhite bg-opacity-90 p-6 shadow-lg">
+          <h2 className="text-xl font-bold text-paradisePink mb-4">Recent Purchases</h2>
+          <ul className="space-y-4">
+            <li className="flex items-center gap-4">
+              <div className="relative h-14 w-14 overflow-hidden rounded-lg border-2 border-paradiseGold">
+                <Image src="/purchase1.jpg" alt="Purchase 1" fill className="object-cover" />
+              </div>
+              <div className="flex-1">
+                <div className="font-semibold text-paradiseBlack">City Nightscape Photo Collection</div>
+                <div className="text-sm text-paradiseBlack/70">Purchased 2 days ago</div>
+              </div>
+              <button className="inline-flex items-center gap-1 rounded bg-paradiseGold px-3 py-1 text-sm font-semibold text-paradiseBlack hover:bg-paradisePink hover:text-paradiseWhite transition">
+                <Download className="h-4 w-4" /> Download
+              </button>
+            </li>
+            <li className="flex items-center gap-4">
+              <div className="relative h-14 w-14 overflow-hidden rounded-lg border-2 border-paradiseGold">
+                <Image src="/purchase2.jpg" alt="Purchase 2" fill className="object-cover" />
+              </div>
+              <div className="flex-1">
+                <div className="font-semibold text-paradiseBlack">3D Model Asset Bundle</div>
+                <div className="text-sm text-paradiseBlack/70">Purchased 1 week ago</div>
+              </div>
+              <button className="inline-flex items-center gap-1 rounded bg-paradiseGold px-3 py-1 text-sm font-semibold text-paradiseBlack hover:bg-paradisePink hover:text-paradiseWhite transition">
+                <Download className="h-4 w-4" /> Download
+              </button>
+            </li>
+            <li className="flex items-center gap-4">
+              <div className="relative h-14 w-14 overflow-hidden rounded-lg border-2 border-paradiseGold">
+                <Image src="/purchase3.jpg" alt="Purchase 3" fill className="object-cover" />
+              </div>
+              <div className="flex-1">
+                <div className="font-semibold text-paradiseBlack">Abstract Digital Art Pack</div>
+                <div className="text-sm text-paradiseBlack/70">Purchased 2 weeks ago</div>
+              </div>
+              <button className="inline-flex items-center gap-1 rounded bg-paradiseGold px-3 py-1 text-sm font-semibold text-paradiseBlack hover:bg-paradisePink hover:text-paradiseWhite transition">
+                <Download className="h-4 w-4" /> Download
+              </button>
+            </li>
+          </ul>
+        </div>
 
-              {/* Recent Downloads Tab */}
-              <TabsContent value="downloads" className="space-y-4">
-                <Card className="border-blue-500/30 bg-gray-900/60 shadow-[0_0_15px_rgba(59,130,246,0.15)]">
-                  <CardHeader>
-                    <CardTitle className="text-white">Recent Downloads</CardTitle>
-                    <CardDescription className="text-blue-200">Content you've downloaded recently</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {Array.from({ length: 4 }).map((_, i) => (
-                        <div key={i} className="flex gap-4 border-b border-blue-800/30 pb-4 last:border-0">
-                          <div className="relative h-16 w-16 overflow-hidden rounded-md">
-                            <Image
-                              src={`/placeholder.svg?height=64&width=64`}
-                              width={64}
-                              height={64}
-                              alt={`Download ${i + 1}`}
-                              className="h-full w-full object-cover"
-                            />
-                          </div>
-                          <div className="flex flex-1 flex-col justify-center">
-                            <h4 className="font-medium text-white">
-                              {
-                                [
-                                  "Abstract Pattern Set",
-                                  "Urban Photography Pack",
-                                  "Landscape Textures",
-                                  "Digital Art Assets",
-                                ][i]
-                              }
-                            </h4>
-                            <p className="text-sm text-blue-200">
-                              {["15 files", "8 files", "12 files", "20 files"][i]} •{" "}
-                              {["PNG", "JPG", "PNG/SVG", "PSD/AI"][i]}
-                            </p>
-                            <div className="mt-1 text-xs text-blue-300">
-                              Downloaded {["1 day ago", "3 days ago", "1 week ago", "2 weeks ago"][i]}
-                            </div>
-                          </div>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="self-center border-blue-700 text-blue-200 hover:bg-blue-900/50 hover:text-white"
-                          >
-                            <Download className="mr-1 h-3 w-3" />
-                            Redownload
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                  <CardFooter>
-                    <Button
-                      variant="outline"
-                      className="w-full border-blue-700 text-blue-200 hover:bg-blue-900/50 hover:text-white"
-                    >
-                      View All Downloads
-                    </Button>
-                  </CardFooter>
-                </Card>
-              </TabsContent>
-            </Tabs>
-          </main>
+        {/* Recent Activity */}
+        <div className="rounded-2xl bg-paradiseWhite bg-opacity-90 p-6 shadow-lg">
+          <h2 className="text-xl font-bold text-paradisePink mb-4">Recent Activity</h2>
+          <ul className="space-y-4">
+            <li className="flex items-center gap-4">
+              <Star className="h-6 w-6 text-paradiseGold" />
+              <span className="text-paradiseBlack">Rated a creator: <span className="font-semibold text-paradisePink">DigitalDesigner</span></span>
+              <span className="ml-auto text-sm text-paradiseGold">2 hours ago</span>
+            </li>
+            <li className="flex items-center gap-4">
+              <Download className="h-6 w-6 text-paradisePink" />
+              <span className="text-paradiseBlack">Downloaded <span className="font-semibold text-paradiseGold">City Nightscape Photo Collection</span></span>
+              <span className="ml-auto text-sm text-paradiseGold">Yesterday</span>
+            </li>
+            <li className="flex items-center gap-4">
+              <ShoppingCart className="h-6 w-6 text-paradiseGold" />
+              <span className="text-paradiseBlack">Purchased <span className="font-semibold text-paradisePink">3D Model Asset Bundle</span></span>
+              <span className="ml-auto text-sm text-paradiseGold">2 days ago</span>
+            </li>
+          </ul>
+        </div>
+
+        {/* My Content Card */}
+        <div className="rounded-2xl bg-paradiseWhite bg-opacity-90 p-6 shadow-lg">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold text-paradisePink">My Content</h2>
+            <button className="inline-flex items-center gap-1 rounded bg-paradisePink px-3 py-1 text-sm font-semibold text-paradiseWhite hover:bg-paradiseGold hover:text-paradiseBlack transition">
+              <Upload className="h-4 w-4" /> Upload New
+            </button>
+          </div>
+          <ul className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            <li className="rounded-lg border-2 border-paradiseGold overflow-hidden bg-paradiseWhite shadow">
+              <div className="relative h-28 w-full">
+                <Image src="/mycontent1.jpg" alt="Content 1" fill className="object-cover" />
+              </div>
+              <div className="p-3">
+                <div className="font-semibold text-paradiseBlack">Urban Sunset</div>
+                <div className="text-xs text-paradiseBlack/60">Uploaded 3 days ago</div>
+              </div>
+            </li>
+            <li className="rounded-lg border-2 border-paradiseGold overflow-hidden bg-paradiseWhite shadow">
+              <div className="relative h-28 w-full">
+                <Image src="/mycontent2.jpg" alt="Content 2" fill className="object-cover" />
+              </div>
+              <div className="p-3">
+                <div className="font-semibold text-paradiseBlack">Neon Dreams</div>
+                <div className="text-xs text-paradiseBlack/60">Uploaded 1 week ago</div>
+              </div>
+            </li>
+            <li className="rounded-lg border-2 border-paradiseGold overflow-hidden bg-paradiseWhite shadow">
+              <div className="relative h-28 w-full">
+                <Image src="/mycontent3.jpg" alt="Content 3" fill className="object-cover" />
+              </div>
+              <div className="p-3">
+                <div className="font-semibold text-paradiseBlack">Abstract Flow</div>
+                <div className="text-xs text-paradiseBlack/60">Uploaded 2 weeks ago</div>
+              </div>
+            </li>
+          </ul>
         </div>
       </div>
     </div>
-  )
+  );
 }

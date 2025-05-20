@@ -96,28 +96,6 @@ export default function SignUpPage() {
               <Separator className="bg-purple-700/50" />
               <span className="absolute bg-gray-950 px-2 text-xs text-purple-300">OR CONTINUE WITH</span>
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <Button
-                variant="outline"
-                className="border-purple-700 bg-gray-900 text-purple-200 hover:bg-purple-900/50 hover:text-white"
-              >
-                <Image src="/placeholder.svg?height=24&width=24" width={20} height={20} className="mr-2" alt="Google" />
-                Google
-              </Button>
-              <Button
-                variant="outline"
-                className="border-purple-700 bg-gray-900 text-purple-200 hover:bg-purple-900/50 hover:text-white"
-              >
-                <Image
-                  src="/placeholder.svg?height=24&width=24"
-                  width={20}
-                  height={20}
-                  className="mr-2"
-                  alt="Facebook"
-                />
-                Facebook
-              </Button>
-            </div>
           </div>
           <div className="mt-4 text-center text-sm text-purple-200">
             Already have an account?{" "}

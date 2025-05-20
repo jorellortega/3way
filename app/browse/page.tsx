@@ -1,6 +1,9 @@
+'use client';
+
 import Link from "next/link"
 import Image from "next/image"
-import { Filter, LayoutGrid, List, Search, SlidersHorizontal } from "lucide-react"
+import { Filter, LayoutGrid, List, Search, SlidersHorizontal, ShoppingCart } from "lucide-react"
+import React, { useState } from 'react';
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -8,6 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 export default function BrowsePage() {
+  const [addedIndex, setAddedIndex] = useState<number | null>(null);
+
   return (
     <div className="flex min-h-screen flex-col bg-gradient-to-br from-paradisePink via-paradiseGold to-paradiseWhite">
       <div className="container px-4 py-8 md:px-6 md:py-12">
@@ -121,6 +126,46 @@ export default function BrowsePage() {
                             <p className="text-sm text-paradiseGold">By Creator Name</p>
                             <p className="font-medium text-paradisePink">$9.99</p>
                           </div>
+                          <div className="flex gap-2 mt-2">
+                            <Button
+                              className="flex-1 bg-paradisePink hover:bg-paradiseGold text-paradiseWhite font-semibold"
+                              onClick={e => {
+                                e.preventDefault();
+                                if (typeof window !== 'undefined') {
+                                  const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+                                  cart.push({
+                                    id: i + 1,
+                                    name: `Digital Content Title ${i + 1}`,
+                                    price: 9.99,
+                                  });
+                                  localStorage.setItem('cart', JSON.stringify(cart));
+                                  setAddedIndex(i);
+                                  setTimeout(() => setAddedIndex(null), 1200);
+                                }
+                              }}
+                            >
+                              <ShoppingCart className="h-4 w-4 mr-1" />
+                              {addedIndex === i ? 'Added!' : 'Add to Cart'}
+                            </Button>
+                            <Button
+                              className="flex-1 bg-paradiseGold hover:bg-paradisePink text-paradiseBlack font-semibold"
+                              onClick={e => {
+                                e.preventDefault();
+                                if (typeof window !== 'undefined') {
+                                  localStorage.setItem('cart', JSON.stringify([
+                                    {
+                                      id: i + 1,
+                                      name: `Digital Content Title ${i + 1}`,
+                                      price: 9.99,
+                                    },
+                                  ]));
+                                  window.location.href = '/checkout';
+                                }
+                              }}
+                            >
+                              <ShoppingCart className="h-4 w-4 mr-1" /> Buy Now
+                            </Button>
+                          </div>
                         </div>
                       </div>
                     </Link>
@@ -168,6 +213,46 @@ export default function BrowsePage() {
                               <span className="text-xs text-paradiseGold">1.2k downloads</span>
                             </div>
                             <p className="font-medium text-paradisePink">$9.99</p>
+                          </div>
+                          <div className="flex gap-2 mt-2">
+                            <Button
+                              className="flex-1 bg-paradisePink hover:bg-paradiseGold text-paradiseWhite font-semibold"
+                              onClick={e => {
+                                e.preventDefault();
+                                if (typeof window !== 'undefined') {
+                                  const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+                                  cart.push({
+                                    id: i + 1,
+                                    name: `Digital Content Title ${i + 1}`,
+                                    price: 9.99,
+                                  });
+                                  localStorage.setItem('cart', JSON.stringify(cart));
+                                  setAddedIndex(i);
+                                  setTimeout(() => setAddedIndex(null), 1200);
+                                }
+                              }}
+                            >
+                              <ShoppingCart className="h-4 w-4 mr-1" />
+                              {addedIndex === i ? 'Added!' : 'Add to Cart'}
+                            </Button>
+                            <Button
+                              className="flex-1 bg-paradiseGold hover:bg-paradisePink text-paradiseBlack font-semibold"
+                              onClick={e => {
+                                e.preventDefault();
+                                if (typeof window !== 'undefined') {
+                                  localStorage.setItem('cart', JSON.stringify([
+                                    {
+                                      id: i + 1,
+                                      name: `Digital Content Title ${i + 1}`,
+                                      price: 9.99,
+                                    },
+                                  ]));
+                                  window.location.href = '/checkout';
+                                }
+                              }}
+                            >
+                              <ShoppingCart className="h-4 w-4 mr-1" /> Buy Now
+                            </Button>
                           </div>
                         </div>
                       </div>
