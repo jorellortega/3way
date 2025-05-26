@@ -3,7 +3,8 @@
 import Link from "next/link"
 import Image from "next/image"
 import { Filter, LayoutGrid, List, Search, SlidersHorizontal, ShoppingCart } from "lucide-react"
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { supabase } from "@/lib/supabase";
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -12,6 +13,19 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 export default function BrowsePage() {
   const [addedIndex, setAddedIndex] = useState<number | null>(null);
+  const [content, setContent] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchContent = async () => {
+      const { data } = await supabase
+        .from("content")
+        .select("id, title, price, type, thumbnail_url, status")
+        .eq("status", "published")
+        .order("created_at", { ascending: false });
+      setContent(data || []);
+    };
+    fetchContent();
+  }, []);
 
   return (
     <div className="flex min-h-screen flex-col bg-gradient-to-br from-paradisePink via-paradiseGold to-paradiseWhite">
@@ -95,76 +109,27 @@ export default function BrowsePage() {
               </TabsList>
               <TabsContent value="grid" className="mt-6">
                 <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                  {Array.from({ length: 12 }).map((_, i) => (
-                    <Link key={i} href={`/content/${i + 1}`} className="group">
-                      <div className="overflow-hidden rounded-lg border border-paradiseGold/30 shadow-[0_0_15px_rgba(249,200,70,0.15)]" style={{ backgroundColor: '#141414' }}>
+                  {content.map((item) => (
+                    <Link key={item.id} href={`/content/${item.id}`} className="group">
+                      <div className="overflow-hidden rounded-lg border border-purple-500/30 bg-gray-900 shadow-[0_0_15px_rgba(168,85,247,0.15)]">
                         <div className="relative aspect-[4/3] w-full overflow-hidden">
-                          <Image
-                            src={`/placeholder.svg?height=300&width=400`}
-                            width={400}
-                            height={300}
-                            alt={`Content ${i + 1}`}
-                            className="h-full w-full object-cover transition-all duration-300 group-hover:scale-105"
-                          />
-                          {/* Blurred overlay for other images */}
-                          {i % 3 !== 0 && (
-                            <div className="absolute inset-0 flex items-center justify-center bg-paradiseBlack/50 backdrop-blur-md">
-                              <div className="rounded-full bg-paradisePink px-4 py-2 text-sm font-medium text-paradiseWhite">
-                                Subscribe to View
-                              </div>
-                            </div>
-                          )}
-                          {i % 4 === 0 && (
-                            <div className="absolute right-2 top-2 rounded-full bg-paradisePink px-2 py-1 text-xs font-medium text-paradiseWhite">
-                              Premium
-                            </div>
+                          {item.thumbnail_url ? (
+                            <Image
+                              src={supabase.storage.from('files').getPublicUrl(item.thumbnail_url).data.publicUrl}
+                              width={400}
+                              height={300}
+                              alt={item.title}
+                              className="h-full w-full object-cover transition-all duration-300 group-hover:scale-105"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-purple-200">No Thumbnail</div>
                           )}
                         </div>
                         <div className="p-4">
-                          <h3 className="font-medium text-paradisePink">Digital Content Title {i + 1}</h3>
+                          <h3 className="font-medium text-white">{item.title}</h3>
                           <div className="mt-1 flex items-center justify-between">
-                            <p className="text-sm text-paradiseGold">By Creator Name</p>
-                            <p className="font-medium text-paradisePink">$9.99</p>
-                          </div>
-                          <div className="flex gap-2 mt-2">
-                            <Button
-                              className="flex-1 bg-paradisePink hover:bg-paradiseGold text-paradiseWhite font-semibold"
-                              onClick={e => {
-                                e.preventDefault();
-                                if (typeof window !== 'undefined') {
-                                  const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-                                  cart.push({
-                                    id: i + 1,
-                                    name: `Digital Content Title ${i + 1}`,
-                                    price: 9.99,
-                                  });
-                                  localStorage.setItem('cart', JSON.stringify(cart));
-                                  setAddedIndex(i);
-                                  setTimeout(() => setAddedIndex(null), 1200);
-                                }
-                              }}
-                            >
-                              <ShoppingCart className="h-4 w-4 mr-1" />
-                              {addedIndex === i ? 'Added!' : 'Add to Cart'}
-                            </Button>
-                            <Button
-                              className="flex-1 bg-paradiseGold hover:bg-paradisePink text-paradiseBlack font-semibold"
-                              onClick={e => {
-                                e.preventDefault();
-                                if (typeof window !== 'undefined') {
-                                  localStorage.setItem('cart', JSON.stringify([
-                                    {
-                                      id: i + 1,
-                                      name: `Digital Content Title ${i + 1}`,
-                                      price: 9.99,
-                                    },
-                                  ]));
-                                  window.location.href = '/checkout';
-                                }
-                              }}
-                            >
-                              <ShoppingCart className="h-4 w-4 mr-1" /> Buy Now
-                            </Button>
+                            <p className="text-sm text-purple-200">{item.type}</p>
+                            <p className="font-medium text-purple-400">${item.price?.toFixed(2)}</p>
                           </div>
                         </div>
                       </div>

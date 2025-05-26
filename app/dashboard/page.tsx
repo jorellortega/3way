@@ -1,9 +1,30 @@
-import React from "react";
+"use client";
+import React, { useEffect, useState } from "react";
 import { User, Download, ShoppingCart, Heart, Star, Edit, CreditCard, Settings, ArrowRight, Upload, Eye } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/lib/supabase";
 
 export default function Dashboard() {
+  const { user } = useAuth();
+  const [profile, setProfile] = useState<{ first_name: string; last_name: string; email: string } | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (!user) return;
+      const { data, error } = await supabase
+        .from("users")
+        .select("first_name, last_name, email")
+        .eq("id", user.id)
+        .single();
+      if (data) setProfile(data);
+      setLoading(false);
+    };
+    fetchProfile();
+  }, [user]);
+
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-paradisePink via-paradiseGold to-paradiseWhite p-4">
       <div className="w-full max-w-4xl space-y-8">
@@ -13,8 +34,12 @@ export default function Dashboard() {
             <Image src="/avatar-placeholder.png" alt="User avatar" fill className="object-cover" />
           </div>
           <div className="flex-1 text-center sm:text-left">
-            <div className="text-2xl font-bold text-paradisePink">Jane Doe</div>
-            <div className="text-paradiseBlack/80">jane.doe@email.com</div>
+            <div className="text-2xl font-bold text-paradisePink">
+              {loading ? "Loading..." : profile ? `${profile.first_name} ${profile.last_name}` : ""}
+            </div>
+            <div className="text-paradiseBlack/80">
+              {loading ? "" : profile ? profile.email : ""}
+            </div>
             <button className="mt-2 inline-flex items-center gap-1 rounded bg-paradisePink px-3 py-1 text-sm font-semibold text-paradiseWhite hover:bg-paradiseGold hover:text-paradiseBlack transition">
               <Edit className="h-4 w-4" /> Edit Profile
             </button>
@@ -142,41 +167,41 @@ export default function Dashboard() {
               <Link href="/mycontent" className="inline-flex items-center gap-1 rounded bg-paradiseGold px-3 py-1 text-sm font-semibold text-paradiseBlack hover:bg-paradisePink hover:text-paradiseWhite transition">
                 <Eye className="h-4 w-4" /> View All
               </Link>
-              <button className="inline-flex items-center gap-1 rounded bg-paradisePink px-3 py-1 text-sm font-semibold text-paradiseWhite hover:bg-paradiseGold hover:text-paradiseBlack transition">
-                <Upload className="h-4 w-4" /> Upload New
-              </button>
-            </div>
+            <button className="inline-flex items-center gap-1 rounded bg-paradisePink px-3 py-1 text-sm font-semibold text-paradiseWhite hover:bg-paradiseGold hover:text-paradiseBlack transition">
+              <Upload className="h-4 w-4" /> Upload New
+            </button>
+          </div>
           </div>
           <Link href="/mycontent" className="block">
-            <ul className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+          <ul className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
               <li className="rounded-lg border-2 border-paradiseGold overflow-hidden bg-paradiseWhite shadow hover:border-paradisePink transition">
-                <div className="relative h-28 w-full">
-                  <Image src="/mycontent1.jpg" alt="Content 1" fill className="object-cover" />
-                </div>
-                <div className="p-3">
-                  <div className="font-semibold text-paradiseBlack">Urban Sunset</div>
-                  <div className="text-xs text-paradiseBlack/60">Uploaded 3 days ago</div>
-                </div>
-              </li>
+              <div className="relative h-28 w-full">
+                <Image src="/mycontent1.jpg" alt="Content 1" fill className="object-cover" />
+              </div>
+              <div className="p-3">
+                <div className="font-semibold text-paradiseBlack">Urban Sunset</div>
+                <div className="text-xs text-paradiseBlack/60">Uploaded 3 days ago</div>
+              </div>
+            </li>
               <li className="rounded-lg border-2 border-paradiseGold overflow-hidden bg-paradiseWhite shadow hover:border-paradisePink transition">
-                <div className="relative h-28 w-full">
-                  <Image src="/mycontent2.jpg" alt="Content 2" fill className="object-cover" />
-                </div>
-                <div className="p-3">
-                  <div className="font-semibold text-paradiseBlack">Neon Dreams</div>
-                  <div className="text-xs text-paradiseBlack/60">Uploaded 1 week ago</div>
-                </div>
-              </li>
+              <div className="relative h-28 w-full">
+                <Image src="/mycontent2.jpg" alt="Content 2" fill className="object-cover" />
+              </div>
+              <div className="p-3">
+                <div className="font-semibold text-paradiseBlack">Neon Dreams</div>
+                <div className="text-xs text-paradiseBlack/60">Uploaded 1 week ago</div>
+              </div>
+            </li>
               <li className="rounded-lg border-2 border-paradiseGold overflow-hidden bg-paradiseWhite shadow hover:border-paradisePink transition">
-                <div className="relative h-28 w-full">
-                  <Image src="/mycontent3.jpg" alt="Content 3" fill className="object-cover" />
-                </div>
-                <div className="p-3">
-                  <div className="font-semibold text-paradiseBlack">Abstract Flow</div>
-                  <div className="text-xs text-paradiseBlack/60">Uploaded 2 weeks ago</div>
-                </div>
-              </li>
-            </ul>
+              <div className="relative h-28 w-full">
+                <Image src="/mycontent3.jpg" alt="Content 3" fill className="object-cover" />
+              </div>
+              <div className="p-3">
+                <div className="font-semibold text-paradiseBlack">Abstract Flow</div>
+                <div className="text-xs text-paradiseBlack/60">Uploaded 2 weeks ago</div>
+              </div>
+            </li>
+          </ul>
           </Link>
         </div>
       </div>

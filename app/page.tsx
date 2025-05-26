@@ -1,10 +1,40 @@
+"use client"
+
 import Link from "next/link"
 import Image from "next/image"
 import { ArrowRight, Crown, Star, TrendingUp, ShoppingCart } from "lucide-react"
+import { useEffect, useState } from "react"
+import { supabase } from "@/lib/supabase"
 
 import { Button } from "@/components/ui/button"
 
 export default function Home() {
+  const [logoUrl, setLogoUrl] = useState<string | null>(null)
+  const [featured, setFeatured] = useState<any[]>([])
+
+  useEffect(() => {
+    // Try to fetch the logo from the branding bucket
+    const fetchLogo = async () => {
+      const { data, error } = await supabase.storage.from('files').download('logo.png')
+      if (data) {
+        const url = URL.createObjectURL(data)
+        setLogoUrl(url)
+      }
+    }
+    fetchLogo()
+    // Fetch featured/recent content
+    const fetchFeatured = async () => {
+      const { data } = await supabase
+        .from("content")
+        .select("id, title, price, type, thumbnail_url, status")
+        .eq("status", "published")
+        .order("created_at", { ascending: false })
+        .limit(8)
+      setFeatured(data || [])
+    }
+    fetchFeatured()
+  }, [])
+
   return (
     <div className="flex min-h-screen flex-col bg-gradient-to-br from-paradisePink via-paradiseGold to-paradiseWhite">
       {/* Hero Section */}
@@ -12,7 +42,16 @@ export default function Home() {
         <div className="absolute inset-0 bg-grid-white/[0.02] -z-10"></div>
         <div className="container px-4 md:px-6 relative z-10">
           <div className="grid gap-6 lg:grid-cols-[1fr_400px] lg:gap-12 xl:grid-cols-[1fr_600px]">
-            <div className="flex flex-col justify-center space-y-4">
+            <div className="flex flex-col items-start space-y-4 pt-4">
+              <div className="flex items-start mb-2">
+                <div className="w-56 h-56 rounded-full bg-white/30 flex items-center justify-center overflow-hidden mr-6">
+                  {logoUrl ? (
+                    <Image src={logoUrl} alt="Logo" width={224} height={224} />
+                  ) : (
+                    <span className="text-7xl text-paradisePink font-bold">Logo</span>
+                  )}
+                </div>
+              </div>
               <div className="space-y-2">
                 <h1 className="text-3xl font-bold tracking-tighter text-paradiseBlack sm:text-5xl xl:text-6xl/none">
                   PARADISE BADDIES
@@ -102,28 +141,32 @@ export default function Home() {
             </div>
           </div>
           <div className="mx-auto grid max-w-5xl grid-cols-1 gap-6 py-12 sm:grid-cols-2 md:grid-cols-3 lg:gap-8">
-            {[1, 2, 3, 4, 5, 6].map((item) => (
-              <div key={item} className="relative overflow-hidden rounded-lg border border-paradiseGold shadow-[0_0_15px_rgba(249,200,70,0.15)]" style={{ backgroundColor: '#141414' }}>
+            {featured.map((item) => (
+              <div key={item.id} className="relative overflow-hidden rounded-lg border border-paradiseGold shadow-[0_0_15px_rgba(249,200,70,0.15)]" style={{ backgroundColor: '#141414' }}>
                 <Link
-                  href={`/content/${item}`}
+                  href={`/content/${item.id}`}
                   className="group block flex-1"
                 >
                   <div className="aspect-[4/3] w-full overflow-hidden rounded-lg bg-paradiseWhite">
-                    <Image
-                      src={`/placeholder.svg?height=300&width=400`}
-                      width={400}
-                      height={300}
-                      alt={`Featured content ${item}`}
-                      className="h-full w-full object-cover transition-all duration-300 group-hover:scale-105"
-                    />
+                    {item.thumbnail_url ? (
+                      <Image
+                        src={supabase.storage.from('files').getPublicUrl(item.thumbnail_url).data.publicUrl}
+                        width={400}
+                        height={300}
+                        alt={item.title}
+                        className="h-full w-full object-cover transition-all duration-300 group-hover:scale-105"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-paradisePink">No Thumbnail</div>
+                    )}
                   </div>
                   <div className="absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-paradiseBlack/80 to-transparent p-4 text-paradiseWhite opacity-0 transition-opacity group-hover:opacity-100">
-                    <h3 className="font-medium">Premium Content Title</h3>
-                    <p className="text-sm text-paradiseGold">By Creator Name</p>
+                    <h3 className="font-medium">{item.title}</h3>
+                    <p className="text-sm text-paradiseGold">{item.type}</p>
                   </div>
-                  {item % 2 === 0 && (
+                  {item.type === "Premium" && (
                     <div className="absolute right-2 top-2 rounded-full bg-paradisePink px-2 py-1 text-xs font-medium text-paradiseWhite">
-                      Premium
+                      {item.type}
                     </div>
                   )}
                 </Link>
@@ -170,30 +213,28 @@ export default function Home() {
             </div>
           </div>
           <div className="mx-auto grid max-w-5xl grid-cols-2 gap-6 py-12 md:grid-cols-3 lg:grid-cols-4 lg:gap-8">
-            {[1, 2, 3, 4, 5, 6, 7, 8].map((creator) => (
-              <Link key={creator} href={`/creators/${creator}`} className="group">
+            {featured.map((item) => (
+              <Link key={item.id} href={`/content/${item.id}`} className="group">
                 <div className="flex flex-col items-center space-y-3">
                   <div className="relative h-24 w-24 overflow-hidden rounded-full border-2 border-paradiseGold shadow-[0_0_15px_rgba(249,200,70,0.3)] md:h-32 md:w-32">
-                    <Image
-                      src={`/placeholder.svg?height=128&width=128`}
-                      width={128}
-                      height={128}
-                      alt={`Creator ${creator}`}
-                      className="h-full w-full object-cover transition-all duration-300 group-hover:scale-110"
-                    />
-                    {creator <= 3 && (
-                      <div className="absolute -right-1 -top-1 rounded-full bg-paradisePink p-1">
-                        <Crown className="h-4 w-4 text-paradiseWhite" />
-                      </div>
+                    {item.thumbnail_url ? (
+                      <Image
+                        src={supabase.storage.from('files').getPublicUrl(item.thumbnail_url).data.publicUrl}
+                        width={128}
+                        height={128}
+                        alt={item.title}
+                        className="h-full w-full object-cover transition-all duration-300 group-hover:scale-110"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-paradisePink">No Thumbnail</div>
                     )}
                   </div>
                   <div className="text-center">
-                    <h3 className="font-medium text-paradisePink">Creator Name</h3>
+                    <h3 className="font-medium text-paradisePink">{item.title}</h3>
                     <div className="mt-1 flex items-center justify-center">
-                      <Star className="h-4 w-4 fill-paradiseGold text-paradiseGold" />
-                      <span className="ml-1 text-sm text-paradiseGold">4.9</span>
+                      <span className="ml-1 text-sm text-paradiseGold">{item.type}</span>
                     </div>
-                    <p className="mt-1 text-xs text-paradisePink">1.2k subscribers</p>
+                    <p className="mt-1 text-xs text-paradisePink">${item.price?.toFixed(2)}</p>
                   </div>
                 </div>
               </Link>

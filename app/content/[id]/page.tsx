@@ -1,11 +1,88 @@
-import Link from "next/link"
-import Image from "next/image"
-import { ArrowLeft, Heart, Share2, ShoppingCart, Star } from "lucide-react"
+"use client";
 
-import { Button } from "@/components/ui/button"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useEffect, useState, useRef } from "react";
+import { useParams } from "next/navigation";
+import { supabase } from "@/lib/supabase";
+import Image from "next/image";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import { ArrowLeft, Heart, Share2, ShoppingCart, Star } from "lucide-react";
 
-export default function ContentDetailPage({ params }: { params: { id: string } }) {
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
+export default function ContentDetailPage() {
+  const params = useParams();
+  const id = params?.id;
+  const [content, setContent] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [related, setRelated] = useState<any[]>([]);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+
+  useEffect(() => {
+    if (!id) return;
+    const fetchContent = async () => {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from("content")
+        .select("*")
+        .eq("id", id)
+        .single();
+      if (error) setError(error.message);
+      else setContent(data);
+      setLoading(false);
+    };
+    fetchContent();
+    // Fetch related content
+    const fetchRelated = async () => {
+      const { data } = await supabase
+        .from("content")
+        .select("id, title, price, type, thumbnail_url, status")
+        .eq("status", "published")
+        .neq("id", id)
+        .order("created_at", { ascending: false })
+        .limit(4);
+      setRelated(data || []);
+    };
+    fetchRelated();
+  }, [id]);
+
+  const handlePlayPause = () => {
+    if (!videoRef.current) return;
+    if (isPlaying) {
+      videoRef.current.pause();
+    } else {
+      videoRef.current.play();
+    }
+    setIsPlaying(!isPlaying);
+  };
+
+  const handleTimeUpdate = () => {
+    if (videoRef.current) {
+      setCurrentTime(videoRef.current.currentTime);
+    }
+  };
+
+  const handleLoadedMetadata = () => {
+    if (videoRef.current) {
+      setDuration(videoRef.current.duration);
+    }
+  };
+
+  const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (videoRef.current) {
+      videoRef.current.currentTime = Number(e.target.value);
+      setCurrentTime(Number(e.target.value));
+    }
+  };
+
+  if (loading) return <div className="p-8 text-center">Loading...</div>;
+  if (error) return <div className="p-8 text-center text-red-500">{error}</div>;
+  if (!content) return <div className="p-8 text-center text-purple-200">Content not found.</div>;
+
   return (
     <div className="bg-gradient-to-br from-gray-950 via-purple-950/80 to-gray-950 min-h-screen">
       <div className="container px-4 py-8 md:px-6 md:py-12">
@@ -20,13 +97,55 @@ export default function ContentDetailPage({ params }: { params: { id: string } }
           <div className="space-y-4">
             <div className="overflow-hidden rounded-lg border border-purple-500/30 shadow-[0_0_15px_rgba(168,85,247,0.15)]">
               <div className="relative aspect-[4/3] w-full">
-                <Image
-                  src={`/placeholder.svg?height=600&width=800`}
-                  width={800}
-                  height={600}
-                  alt="Content preview"
-                  className="h-full w-full object-cover"
-                />
+                {content.type === 'video' && content.content_url ? (
+                  <div className="w-full h-full flex flex-col items-center justify-center bg-black">
+                    <video
+                      ref={videoRef}
+                      src={supabase.storage.from('files').getPublicUrl(content.content_url).data.publicUrl}
+                      width={800}
+                      height={600}
+                      className="rounded-lg w-full h-auto max-h-[480px] bg-black"
+                      onTimeUpdate={handleTimeUpdate}
+                      onLoadedMetadata={handleLoadedMetadata}
+                      controls={false}
+                    />
+                    <div className="flex items-center gap-2 w-full mt-2">
+                      <Button size="icon" variant="outline" onClick={handlePlayPause} className="bg-purple-800 text-white flex items-center justify-center h-10 w-10 p-0">
+                        {isPlaying ? (
+                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 mx-auto my-auto">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 5.25v13.5m-7.5-13.5v13.5" />
+                          </svg>
+                        ) : (
+                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 mx-auto my-auto">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M5.25 5.25v13.5l13.5-6.75-13.5-6.75z" />
+                          </svg>
+                        )}
+                      </Button>
+                      <input
+                        type="range"
+                        min={0}
+                        max={duration}
+                        step={0.1}
+                        value={currentTime}
+                        onChange={handleSeek}
+                        className="flex-1 h-2 rounded-lg bg-purple-200/40 accent-purple-600 appearance-none outline-none focus:ring-2 focus:ring-purple-400 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-paradisePink [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-white [&::-webkit-slider-thumb]:shadow [&::-webkit-slider-thumb]:transition-all [&::-webkit-slider-thumb]:duration-200 [&::-webkit-slider-thumb]:hover:bg-paradiseGold [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-paradisePink [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-white [&::-moz-range-thumb]:shadow [&::-moz-range-thumb]:transition-all [&::-moz-range-thumb]:duration-200 [&::-moz-range-thumb]:hover:bg-paradiseGold"
+                      />
+                      <span className="text-xs text-purple-200 min-w-[60px] text-right">
+                        {Math.floor(currentTime / 60)}:{String(Math.floor(currentTime % 60)).padStart(2, '0')} / {Math.floor(duration / 60)}:{String(Math.floor(duration % 60)).padStart(2, '0')}
+                      </span>
+                    </div>
+                  </div>
+                ) : content.thumbnail_url ? (
+                  <Image
+                    src={supabase.storage.from('files').getPublicUrl(content.thumbnail_url).data.publicUrl}
+                    width={800}
+                    height={600}
+                    alt={content.title}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-64 flex items-center justify-center text-purple-200 bg-gray-800 rounded-lg">No Thumbnail</div>
+                )}
               </div>
             </div>
             <div className="grid grid-cols-5 gap-2">
@@ -64,7 +183,7 @@ export default function ContentDetailPage({ params }: { params: { id: string } }
 
           <div className="space-y-6">
             <div>
-              <h1 className="text-3xl font-bold text-white">Premium Digital Content Title</h1>
+              <h1 className="text-3xl font-bold text-white">{content.title}</h1>
               <div className="mt-2 flex items-center gap-4">
                 <div className="flex items-center gap-1">
                   <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
@@ -221,28 +340,27 @@ export default function ContentDetailPage({ params }: { params: { id: string } }
         <div className="mt-12 space-y-6">
           <h2 className="text-2xl font-bold text-white">Related Content</h2>
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <Link key={i} href={`/content/${i + 10}`} className="group">
+            {related.map((item) => (
+              <Link key={item.id} href={`/content/${item.id}`} className="group">
                 <div className="overflow-hidden rounded-lg border border-purple-500/30 bg-gray-900 shadow-[0_0_15px_rgba(168,85,247,0.15)]">
                   <div className="relative aspect-[4/3] w-full overflow-hidden">
-                    <Image
-                      src={`/placeholder.svg?height=300&width=400`}
-                      width={400}
-                      height={300}
-                      alt={`Related content ${i + 1}`}
-                      className="h-full w-full object-cover transition-all duration-300 group-hover:scale-105"
-                    />
-                    {i % 2 === 0 && (
-                      <div className="absolute right-2 top-2 rounded-full bg-purple-600 px-2 py-1 text-xs font-medium text-white">
-                        Premium
-                      </div>
+                    {item.thumbnail_url ? (
+                      <Image
+                        src={supabase.storage.from('files').getPublicUrl(item.thumbnail_url).data.publicUrl}
+                        width={400}
+                        height={300}
+                        alt={item.title}
+                        className="h-full w-full object-cover transition-all duration-300 group-hover:scale-105"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-purple-200">No Thumbnail</div>
                     )}
                   </div>
                   <div className="p-4">
-                    <h3 className="font-medium text-white">Digital Content Title {i + 10}</h3>
+                    <h3 className="font-medium text-white">{item.title}</h3>
                     <div className="mt-1 flex items-center justify-between">
-                      <p className="text-sm text-purple-200">By Creator Name</p>
-                      <p className="font-medium text-purple-400">$9.99</p>
+                      <p className="text-sm text-purple-200">{item.type}</p>
+                      <p className="font-medium text-purple-400">${item.price?.toFixed(2)}</p>
                     </div>
                   </div>
                 </div>
@@ -252,5 +370,5 @@ export default function ContentDetailPage({ params }: { params: { id: string } }
         </div>
       </div>
     </div>
-  )
+  );
 }

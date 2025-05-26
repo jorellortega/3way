@@ -5,6 +5,9 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Upload, Image as ImageIcon, Video, FileText, Music } from "lucide-react"
 import Image from "next/image"
+import { supabase } from "@/lib/supabase"
+import { useAuth } from "@/hooks/useAuth"
+import { useRouter } from "next/navigation"
 
 const categories = [
   { label: "Video", value: "video", icon: <Video className="h-4 w-4 inline" /> },
@@ -23,6 +26,10 @@ export default function BaddieUploadPage() {
   const [filePreview, setFilePreview] = useState<string | null>(null)
   const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
+  const { user } = useAuth()
+  const [error, setError] = useState("")
+  const [uploading, setUploading] = useState(false)
+  const router = useRouter()
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0]
@@ -42,10 +49,77 @@ export default function BaddieUploadPage() {
       setThumbnailPreview(null)
     }
   }
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
+    setError("")
+    setSuccess(false)
+    if (!user) {
+      setError("You must be signed in to upload.")
+      return
+    }
+    if (!file || !thumbnail) {
+      setError("File and thumbnail are required.")
+      return
+    }
+    setUploading(true)
+    // Fetch user profile for name
+    const { data: profile, error: profileError } = await supabase
+      .from("users")
+      .select("first_name, last_name")
+      .eq("id", user.id)
+      .single()
+    if (profileError || !profile) {
+      setError("Could not fetch user profile for upload path.")
+      setUploading(false)
+      return
+    }
+    const safeName = `${profile.first_name}_${profile.last_name}`.replace(/\s+/g, '_').toLowerCase()
+    const folder = `baddies/${safeName}_${user.id}`
+    // Upload main file
+    const filePath = `${folder}/${file.name}`
+    const { error: fileError } = await supabase.storage.from('files').upload(filePath, file, { upsert: true })
+    if (fileError) {
+      setError(`File upload failed: ${fileError.message}`)
+      setUploading(false)
+      return
+    }
+    // Upload thumbnail
+    const thumbPath = `${folder}/thumbnails/${thumbnail.name}`
+    const { error: thumbError } = await supabase.storage.from('files').upload(thumbPath, thumbnail, { upsert: true })
+    if (thumbError) {
+      setError(`Thumbnail upload failed: ${thumbError.message}`)
+      setUploading(false)
+      return
+    }
+    // Insert into content table
+    const { error: dbError } = await supabase.from('content').insert({
+      creator_id: user.id,
+      title,
+      description,
+      price: price ? parseFloat(price) : 0,
+      type: category,
+      status: 'published',
+      thumbnail_url: thumbPath,
+      content_url: filePath,
+    })
+    if (dbError) {
+      setError(`Database error: ${dbError.message}`)
+      setUploading(false)
+      return
+    }
     setSuccess(true)
-    setTimeout(() => setSuccess(false), 3000)
+    setTitle("")
+    setDescription("")
+    setPrice("")
+    setFile(null)
+    setThumbnail(null)
+    setFilePreview(null)
+    setThumbnailPreview(null)
+    setUploading(false)
+    setTimeout(() => {
+      setSuccess(false)
+      router.push("/managecontent")
+    }, 1000)
   }
 
   return (
@@ -140,11 +214,14 @@ export default function BaddieUploadPage() {
                 placeholder="Free or set a price"
               />
             </div>
-            <Button type="submit" className="w-full bg-paradisePink hover:bg-paradiseGold text-white font-semibold">
-              Upload
+            <Button type="submit" className="w-full bg-paradisePink hover:bg-paradiseGold text-white font-semibold" disabled={uploading}>
+              {uploading ? "Uploading..." : "Upload"}
             </Button>
+            {error && (
+              <div className="text-red-400 text-center font-semibold mt-2">{error}</div>
+            )}
             {success && (
-              <div className="text-green-400 text-center font-semibold mt-2">Content uploaded! (mock)</div>
+              <div className="text-green-400 text-center font-semibold mt-2">Content uploaded!</div>
             )}
           </form>
         </CardContent>

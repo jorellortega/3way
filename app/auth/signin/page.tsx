@@ -1,7 +1,8 @@
 'use client';
 
 import Link from "next/link"
-import Image from "next/image"
+import { useState } from "react"
+import { useAuth } from "@/hooks/useAuth"
 import { useRouter } from "next/navigation"
 
 import { Button } from "@/components/ui/button"
@@ -9,12 +10,28 @@ import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
 
 export default function SignInPage() {
+  const { signIn } = useAuth()
   const router = useRouter()
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [error, setError] = useState("")
+  const [loading, setLoading] = useState(false)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // Simulate successful sign-in
-    router.push("/dashboard")
+    setError("")
+    setLoading(true)
+    const { data, error } = await signIn(email, password)
+    setLoading(false)
+    if (error) {
+      if (error instanceof Error) {
+        setError(error.message)
+      } else {
+        setError(error?.toString() || "Sign in failed.")
+      }
+    } else {
+      window.location.href = "/dashboard"
+    }
   }
 
   return (
@@ -28,7 +45,7 @@ export default function SignInPage() {
             <h1 className="text-2xl font-bold text-white">Sign in to your account</h1>
             <p className="text-sm text-purple-200">Enter your email and password to access your account</p>
           </div>
-          <div className="grid gap-4">
+          <form className="grid gap-4" onSubmit={handleSubmit}>
             <div className="grid gap-2">
               <label className="text-sm font-medium text-purple-100" htmlFor="email">
                 Email
@@ -41,6 +58,8 @@ export default function SignInPage() {
                 autoCapitalize="none"
                 autoComplete="email"
                 autoCorrect="off"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
               />
             </div>
             <div className="grid gap-2">
@@ -60,14 +79,19 @@ export default function SignInPage() {
                 autoCapitalize="none"
                 autoComplete="current-password"
                 autoCorrect="off"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
               />
             </div>
-            <Button className="w-full bg-purple-600 hover:bg-purple-700 text-white" onClick={handleSubmit}>Sign In</Button>
+            <Button className="w-full bg-purple-600 hover:bg-purple-700 text-white" type="submit" disabled={loading}>
+              {loading ? "Signing in..." : "Sign In"}
+            </Button>
+            {error && <div className="text-red-500 text-sm">{error}</div>}
             <div className="relative flex items-center justify-center">
               <Separator className="bg-purple-700/50" />
               <span className="absolute bg-gray-950 px-2 text-xs text-purple-300">OR CONTINUE WITH</span>
             </div>
-          </div>
+          </form>
           <div className="mt-4 text-center text-sm text-purple-200">
             Don&apos;t have an account?{" "}
             <Link href="/auth/signup" className="font-medium text-purple-400 hover:text-purple-300">

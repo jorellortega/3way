@@ -33,7 +33,7 @@ export default function RootLayout({
               <NavBar />
               <div className="w-full bg-black/85 text-white text-center py-2 font-medium">
                 Under Development - Coming Soon
-              </div>
+                </div>
               <main className="flex-1">
                 <Suspense>{children}</Suspense>
               </main>
