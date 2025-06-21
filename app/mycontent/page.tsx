@@ -6,13 +6,15 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Download, Eye, Play, Image as ImageIcon, Video, FileText, Heart, List, Grid } from "lucide-react"
 import Image from "next/image"
 import clsx from "clsx"
-import { supabase } from "@/lib/supabase"
 import { useAuth } from "@/hooks/useAuth"
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+import type { Database } from "@/types/supabase"
 
 const mockCategories = ["All", "Video", "Photo", "Document", "Audio"];
 
 export default function MyContentPage() {
   const { user } = useAuth();
+  const [supabase] = useState(() => createClientComponentClient<Database>())
   const [favorites, setFavorites] = useState<number[]>([1, 4]);
   const [activeTab, setActiveTab] = useState<string>("All");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
@@ -167,7 +169,7 @@ export default function MyContentPage() {
                 <div className="aspect-video relative overflow-hidden rounded-lg mb-4">
                   {item.thumbnail_url ? (
                     <Image
-                      src={supabase.storage.from('files').getPublicUrl(item.thumbnail_url).data.publicUrl}
+                      src={supabase.storage.from('files').getPublicUrl(item.thumbnail_url).data.publicUrl || ''}
                       alt={item.title}
                       fill
                       className="object-cover w-full h-full"
@@ -204,7 +206,7 @@ export default function MyContentPage() {
               <div className="relative h-14 w-24 flex-shrink-0">
                 {item.thumbnail_url ? (
                   <Image
-                    src={supabase.storage.from('files').getPublicUrl(item.thumbnail_url).data.publicUrl}
+                    src={supabase.storage.from('files').getPublicUrl(item.thumbnail_url).data.publicUrl || ''}
                     alt={item.title}
                     fill
                     className="object-cover rounded"

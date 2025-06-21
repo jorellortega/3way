@@ -11,12 +11,11 @@ export interface Database {
     Tables: {
       users: {
         Row: {
-          id: number
+          id: string
           first_name: string
           last_name: string
           email: string
-          password: string
-          role: 'user' | 'creator' | 'admin'
+          role: 'user' | 'creator' | 'admin' | 'ceo'
           created_at: string
           updated_at: string
           profile_image: string | null
@@ -25,12 +24,11 @@ export interface Database {
           last_login: string | null
         }
         Insert: {
-          id?: number
+          id: string
           first_name: string
           last_name: string
           email: string
-          password: string
-          role?: 'user' | 'creator' | 'admin'
+          role?: 'user' | 'creator' | 'admin' | 'ceo'
           created_at?: string
           updated_at?: string
           profile_image?: string | null
@@ -39,12 +37,11 @@ export interface Database {
           last_login?: string | null
         }
         Update: {
-          id?: number
+          id?: string
           first_name?: string
           last_name?: string
           email?: string
-          password?: string
-          role?: 'user' | 'creator' | 'admin'
+          role?: 'user' | 'creator' | 'admin' | 'ceo'
           created_at?: string
           updated_at?: string
           profile_image?: string | null
@@ -56,7 +53,7 @@ export interface Database {
       content: {
         Row: {
           id: number
-          creator_id: number
+          creator_id: string
           title: string
           description: string | null
           price: number
@@ -72,7 +69,7 @@ export interface Database {
         }
         Insert: {
           id?: number
-          creator_id: number
+          creator_id: string
           title: string
           description?: string | null
           price: number
@@ -88,7 +85,7 @@ export interface Database {
         }
         Update: {
           id?: number
-          creator_id?: number
+          creator_id?: string
           title?: string
           description?: string | null
           price?: number
@@ -101,6 +98,38 @@ export interface Database {
           views_count?: number
           likes_count?: number
           is_featured?: boolean
+        }
+      }
+      user_content_access: {
+        Row: {
+          id: string
+          user_id: string
+          content_id: number
+          transaction_id: string
+          access_granted: boolean
+          expires_at: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          content_id: number
+          transaction_id: string
+          access_granted?: boolean
+          expires_at: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          content_id?: number
+          transaction_id?: string
+          access_granted?: boolean
+          expires_at?: string
+          created_at?: string
+          updated_at?: string
         }
       }
       // Add other table types as needed

@@ -1,13 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import type { Database } from "@/types/supabase";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 
 export default function ManageContentPage() {
   const { user } = useAuth();
+  const [supabase] = useState(() => createClientComponentClient<Database>())
   const [content, setContent] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -84,7 +86,7 @@ export default function ManageContentPage() {
             <div key={item.id} className="bg-gray-900 border border-purple-900/40 rounded-lg p-4 flex flex-col md:flex-row gap-4">
               <div className="w-32 h-24 relative rounded overflow-hidden bg-gray-800 flex-shrink-0">
                 {item.thumbnail_url ? (
-                  <Image src={supabase.storage.from('files').getPublicUrl(item.thumbnail_url).data.publicUrl} alt={item.title} fill className="object-cover" />
+                  <Image src={supabase.storage.from('files').getPublicUrl(item.thumbnail_url).data.publicUrl || ''} alt={item.title} fill className="object-cover" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-purple-200">No Thumbnail</div>
                 )}
@@ -128,7 +130,14 @@ export default function ManageContentPage() {
                     </select>
                     <div className="flex gap-2 mt-2">
                       <Button size="sm" variant="default" onClick={() => handleEditSave(item.id)}>Save</Button>
-                      <Button size="sm" variant="outline" onClick={handleEditCancel}>Cancel</Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="border-gray-600 bg-transparent text-gray-300 hover:bg-gray-700 hover:text-white"
+                        onClick={handleEditCancel}
+                      >
+                        Cancel
+                      </Button>
                     </div>
                   </div>
                 ) : (
@@ -142,9 +151,18 @@ export default function ManageContentPage() {
                 )}
                 <div className="flex gap-2 mt-3">
                   {editingId === item.id ? null : (
-                    <Button size="sm" variant="outline" onClick={() => handleEdit(item)}>Edit</Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="border-purple-600 bg-transparent text-purple-300 hover:bg-purple-600 hover:text-white"
+                      onClick={() => handleEdit(item)}
+                    >
+                      Edit
+                    </Button>
                   )}
-                  <Button size="sm" variant="destructive" onClick={() => handleDelete(item.id)}>Delete</Button>
+                  <Button size="sm" variant="destructive" onClick={() => handleDelete(item.id)}>
+                    Delete
+                  </Button>
                 </div>
               </div>
             </div>

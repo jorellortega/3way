@@ -10,11 +10,25 @@ export async function middleware(req: NextRequest) {
     data: { session },
   } = await supabase.auth.getSession()
 
-  // Only protect /mycontent for now
+  console.log('Middleware - Path:', req.nextUrl.pathname, 'Session:', !!session)
+
+  // If user is logged in and tries to access an auth page, redirect to dashboard
+  if (session && req.nextUrl.pathname.startsWith('/auth')) {
+    return NextResponse.redirect(new URL('/dashboard', req.url))
+  }
+
+  // Protect routes that require authentication
   if (
     !session &&
-    req.nextUrl.pathname.startsWith('/mycontent')
+    (
+      req.nextUrl.pathname.startsWith('/mycontent') ||
+      req.nextUrl.pathname.startsWith('/dashboard') ||
+      req.nextUrl.pathname.startsWith('/baddieupload') ||
+      req.nextUrl.pathname.startsWith('/creatordash') ||
+      req.nextUrl.pathname.startsWith('/managecontent')
+    )
   ) {
+    console.log('Middleware - Redirecting to signin from:', req.nextUrl.pathname)
     return NextResponse.redirect(new URL('/auth/signin', req.url))
   }
 
@@ -22,5 +36,12 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
+  matcher: [
+    '/dashboard/:path*',
+    '/mycontent/:path*',
+    '/baddieupload/:path*',
+    '/creatordash/:path*',
+    '/managecontent/:path*',
+    '/auth/:path*'
+  ],
 } 

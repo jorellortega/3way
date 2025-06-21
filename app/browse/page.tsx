@@ -4,7 +4,8 @@ import Link from "next/link"
 import Image from "next/image"
 import { Filter, LayoutGrid, List, Search, SlidersHorizontal, ShoppingCart } from "lucide-react"
 import React, { useState, useEffect } from 'react';
-import { supabase } from "@/lib/supabase";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import type { Database } from "@/types/supabase";
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -12,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 export default function BrowsePage() {
+  const [supabase] = useState(() => createClientComponentClient<Database>())
   const [addedIndex, setAddedIndex] = useState<number | null>(null);
   const [content, setContent] = useState<any[]>([]);
 
@@ -19,7 +21,7 @@ export default function BrowsePage() {
     const fetchContent = async () => {
       const { data } = await supabase
         .from("content")
-        .select("id, title, price, type, thumbnail_url, status")
+        .select("id, title, price, type, thumbnail_url, status, users(first_name, last_name)")
         .eq("status", "published")
         .order("created_at", { ascending: false });
       setContent(data || []);
@@ -114,20 +116,25 @@ export default function BrowsePage() {
                       <div className="overflow-hidden rounded-lg border border-purple-500/30 bg-gray-900 shadow-[0_0_15px_rgba(168,85,247,0.15)]">
                         <div className="relative aspect-[4/3] w-full overflow-hidden">
                           {item.thumbnail_url ? (
-                            <Image
-                              src={supabase.storage.from('files').getPublicUrl(item.thumbnail_url).data.publicUrl}
-                              width={400}
-                              height={300}
+                          <Image
+                              src={supabase.storage.from('files').getPublicUrl(item.thumbnail_url).data.publicUrl || ''}
+                            width={400}
+                            height={300}
                               alt={item.title}
-                              className="h-full w-full object-cover transition-all duration-300 group-hover:scale-105"
-                            />
+                            className="h-full w-full object-cover transition-all duration-300 group-hover:scale-105"
+                          />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center text-purple-200">No Thumbnail</div>
                           )}
                         </div>
                         <div className="p-4">
                           <h3 className="font-medium text-white">{item.title}</h3>
-                          <div className="mt-1 flex items-center justify-between">
+                          {item.users && (
+                            <p className="text-sm text-purple-300 mt-1 truncate">
+                              By {`${item.users.first_name} ${item.users.last_name}`}
+                            </p>
+                          )}
+                          <div className="mt-2 flex items-center justify-between">
                             <p className="text-sm text-purple-200">{item.type}</p>
                             <p className="font-medium text-purple-400">${item.price?.toFixed(2)}</p>
                           </div>

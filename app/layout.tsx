@@ -8,6 +8,7 @@ import { Suspense } from "react"
 import { CartProvider } from "./cart-context"
 import NavBar from "@/components/NavBar"
 import { ThemeProvider } from "@/components/theme-provider"
+import Footer from "@/components/Footer"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -25,7 +26,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.className} text-white min-h-screen`}>
-        <ThemeProvider attribute="class" defaultTheme="dark" forcedTheme="dark">
+        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
           <CartProvider>
             <div className="relative flex min-h-screen flex-col">
               {/* Gradient background wrapper */}
@@ -37,6 +38,7 @@ export default function RootLayout({
               <main className="flex-1">
                 <Suspense>{children}</Suspense>
               </main>
+              <Footer />
               <footer className="border-t border-purple-900/40 bg-gray-950 py-6">
                 <div className="container flex flex-col items-center justify-between gap-4 px-4 text-center md:flex-row md:px-6 md:text-left">
                   <div className="flex flex-col items-center gap-4 md:flex-row">

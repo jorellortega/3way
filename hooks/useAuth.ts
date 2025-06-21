@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react'
-import { supabase } from '@/lib/supabase'
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 import { useRouter } from 'next/navigation'
+import type { Database } from '@/types/supabase'
 
 export const useAuth = () => {
+  const [supabase] = useState(() => createClientComponentClient<Database>())
   const [user, setUser] = useState<any>(null)
+  const [session, setSession] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const router = useRouter()
 
@@ -12,6 +15,7 @@ export const useAuth = () => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       console.log('Supabase session (getSession):', session);
       setUser(session?.user ?? null)
+      setSession(session)
       setLoading(false)
     })
 
@@ -19,6 +23,7 @@ export const useAuth = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       console.log('Supabase session (onAuthStateChange):', session);
       setUser(session?.user ?? null)
+      setSession(session)
       setLoading(false)
     })
 
@@ -27,32 +32,63 @@ export const useAuth = () => {
 
   const signUp = async (email: string, password: string, userData: any) => {
     try {
+      console.log('Starting sign up process...', { email, userData });
+      
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          data: {
+            first_name: userData.first_name,
+            last_name: userData.last_name,
+          }
+        }
       })
+
+      console.log('Auth sign up response:', { data, error });
 
       if (error) throw error
 
-      if (data.user) {
-        // Create user profile in users table
+      // Check if email confirmation is required
+      if (data.user && !data.session) {
+        console.log('Email confirmation required');
+        return { 
+          data: { 
+            user: data.user, 
+            requiresConfirmation: true 
+          }, 
+          error: null 
+        }
+      }
+
+      if (data.user && data.session) {
+        console.log('User created and signed in successfully:', { userId: data.user.id });
+        
+        // The database trigger will automatically create the user profile
+        // We can optionally update the profile if needed
         const { error: profileError } = await supabase
           .from('users')
-          .insert([
-            {
-              id: data.user.id,
-              email: data.user.email,
+          .update({
               first_name: userData.first_name,
               last_name: userData.last_name,
               role: 'user',
-            },
-          ])
+          })
+          .eq('id', data.user.id)
 
-        if (profileError) throw profileError
+        console.log('Profile update response:', { profileError });
+
+        if (profileError) {
+          console.warn('Profile update failed, but user was created:', profileError);
+        }
+
+        // Session is already established from signup
+        setUser(data.session.user)
+        setSession(data.session)
       }
 
       return { data, error: null }
     } catch (error) {
+      console.error('Sign up error:', error);
       return { data: null, error }
     }
   }
@@ -84,6 +120,7 @@ export const useAuth = () => {
 
   return {
     user,
+    session,
     loading,
     signUp,
     signIn,

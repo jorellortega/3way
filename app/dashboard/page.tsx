@@ -4,26 +4,144 @@ import { User, Download, ShoppingCart, Heart, Star, Edit, CreditCard, Settings, 
 import Image from "next/image";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/lib/supabase";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { useRouter } from "next/navigation";
+import type { Database } from "@/types/supabase";
 
 export default function Dashboard() {
-  const { user } = useAuth();
-  const [profile, setProfile] = useState<{ first_name: string; last_name: string; email: string } | null>(null);
+  const { user, loading: authLoading } = useAuth();
+  const router = useRouter();
+  const [supabase] = useState(() => createClientComponentClient<Database>());
+  const [profile, setProfile] = useState<{ first_name: string; last_name: string; email: string; role: string } | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchProfile = async () => {
-      if (!user) return;
+      // Wait for the auth hook to finish loading
+      if (authLoading) {
+        return;
+      }
+
+      console.log('Dashboard - User:', user);
+      if (!user) {
+        console.log('Dashboard - No user, redirecting to signin');
+        router.push('/auth/signin');
+        return;
+      }
+      
+      // Try to fetch profile with retry logic
+      let retries = 0;
+      const maxRetries = 3;
+      
+      const attemptFetch = async () => {
+        console.log('Dashboard - Attempting to fetch profile for user:', user.id);
       const { data, error } = await supabase
         .from("users")
-        .select("first_name, last_name, email")
+        .select("first_name, last_name, email, role")
         .eq("id", user.id)
         .single();
-      if (data) setProfile(data);
+      
+      if (error) {
+          console.error('Error fetching profile (attempt ' + (retries + 1) + '):', error);
+          
+          // If profile doesn't exist yet (trigger might be delayed), retry
+          if (error.code === 'PGRST116' && retries < maxRetries) {
+            retries++;
+            console.log('Profile not found, retrying in 1 second... (attempt ' + retries + ')');
+            setTimeout(attemptFetch, 1000);
+            return;
+          }
+          
+          // If still no profile after retries, create one manually
+          if (retries >= maxRetries) {
+            console.log('Creating profile manually after retries failed');
+            const { error: createError } = await supabase
+              .from('users')
+              .insert({
+                id: user.id,
+                email: user.email,
+                first_name: user.user_metadata?.first_name || 'User',
+                last_name: user.user_metadata?.last_name || '',
+                role: 'user',
+              });
+            
+            if (createError) {
+              console.error('Error creating profile manually:', createError);
+              router.push('/auth/signin');
+              return;
+            }
+            
+            // Fetch the newly created profile
+            const { data: newData, error: newError } = await supabase
+              .from("users")
+              .select("first_name, last_name, email, role")
+              .eq("id", user.id)
+              .single();
+            
+            if (newError) {
+              console.error('Error fetching newly created profile:', newError);
+              router.push('/auth/signin');
+              return;
+            }
+            
+            setProfile(newData);
+            setLoading(false);
+            return;
+          }
+          
+          console.log('Dashboard - Profile fetch failed, redirecting to signin');
+        router.push('/auth/signin');
+        return;
+      }
+      
+      if (data) {
+          console.log('Dashboard - Profile fetched successfully:', data);
+        setProfile(data);
+        // If user has no role, set default role to 'user'
+        if (!data.role) {
+          const { error: updateError } = await supabase
+            .from('users')
+            .update({ role: 'user' })
+            .eq('id', user.id);
+          if (updateError) {
+            console.error('Error updating role:', updateError);
+          }
+        }
+      }
       setLoading(false);
+      };
+      
+      attemptFetch();
     };
     fetchProfile();
-  }, [user]);
+  }, [user, authLoading, router]);
+
+  if (authLoading || loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-paradisePink">Loading...</h2>
+          <p className="text-paradiseBlack/80">Please wait while we load your dashboard.</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user || !profile) {
+    // This case should ideally be handled by the loading state or redirect,
+    // but as a fallback, we can show a message or redirect.
+    router.push("/auth/signin");
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-paradisePink">Redirecting...</h2>
+          <p className="text-paradiseBlack/80">
+            You need to be signed in to view this page.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-paradisePink via-paradiseGold to-paradiseWhite p-4">
@@ -39,6 +157,9 @@ export default function Dashboard() {
             </div>
             <div className="text-paradiseBlack/80">
               {loading ? "" : profile ? profile.email : ""}
+            </div>
+            <div className="text-sm text-paradiseGold mt-1">
+              Role: {profile.role || 'user'}
             </div>
             <button className="mt-2 inline-flex items-center gap-1 rounded bg-paradisePink px-3 py-1 text-sm font-semibold text-paradiseWhite hover:bg-paradiseGold hover:text-paradiseBlack transition">
               <Edit className="h-4 w-4" /> Edit Profile
@@ -167,10 +288,10 @@ export default function Dashboard() {
               <Link href="/mycontent" className="inline-flex items-center gap-1 rounded bg-paradiseGold px-3 py-1 text-sm font-semibold text-paradiseBlack hover:bg-paradisePink hover:text-paradiseWhite transition">
                 <Eye className="h-4 w-4" /> View All
               </Link>
-            <button className="inline-flex items-center gap-1 rounded bg-paradisePink px-3 py-1 text-sm font-semibold text-paradiseWhite hover:bg-paradiseGold hover:text-paradiseBlack transition">
+              <Link href="/baddieupload" className="inline-flex items-center gap-1 rounded bg-paradisePink px-3 py-1 text-sm font-semibold text-paradiseWhite hover:bg-paradiseGold hover:text-paradiseBlack transition">
               <Upload className="h-4 w-4" /> Upload New
-            </button>
-          </div>
+              </Link>
+            </div>
           </div>
           <Link href="/mycontent" className="block">
           <ul className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">

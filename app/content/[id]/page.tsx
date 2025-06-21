@@ -2,18 +2,39 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useParams } from "next/navigation";
-import { supabase } from "@/lib/supabase";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { ArrowLeft, Heart, Share2, ShoppingCart, Star } from "lucide-react";
+import { ArrowLeft, Heart, Share2, ShoppingCart, Star, Image as ImageIcon } from "lucide-react";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { useAuth } from "@/hooks/useAuth";
+import type { Database } from "@/types/supabase";
+import { CartContext } from "@/app/cart-context";
+import { useContext } from "react";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
+interface Content {
+  id: string;
+  title: string;
+  description: string | null;
+  price: number;
+  type: string;
+  status: string;
+  thumbnail_url: string | null;
+  content_url: string | null;
+  creator: {
+    first_name: string;
+    last_name: string;
+    profile_image: string | null;
+  } | null;
+}
+
 export default function ContentDetailPage() {
   const params = useParams();
-  const id = params?.id;
-  const [content, setContent] = useState<any>(null);
+  const { user } = useAuth();
+  const [supabase] = useState(() => createClientComponentClient<Database>());
+  const [content, setContent] = useState<Content | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [related, setRelated] = useState<any[]>([]);
@@ -21,18 +42,54 @@ export default function ContentDetailPage() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
+  const [hasAccess, setHasAccess] = useState(false);
+  const { addToCart } = useContext(CartContext);
+  const [addedToCart, setAddedToCart] = useState(false);
 
   useEffect(() => {
-    if (!id) return;
     const fetchContent = async () => {
+      if (!params.id) return;
       setLoading(true);
-      const { data, error } = await supabase
+
+      const { data: contentData, error: contentError } = await supabase
         .from("content")
-        .select("*")
-        .eq("id", id)
+        .select(
+          `
+          *,
+          creator:users (
+            first_name,
+            last_name,
+            profile_image
+          )
+        `
+        )
+        .eq("id", params.id)
         .single();
-      if (error) setError(error.message);
-      else setContent(data);
+
+      if (contentError) {
+        setError(contentError.message);
+      } else {
+        setContent(contentData);
+        // If content is free, user has access
+        if (contentData?.price === 0) {
+          setHasAccess(true);
+        }
+      }
+
+      // If user is logged in, check for content access
+      if (user && contentData) {
+        const { data: accessData, error: accessError } = await supabase
+          .from("user_content_access")
+          .select("id")
+          .eq("user_id", user.id)
+          .eq("content_id", contentData.id)
+          .single();
+
+        if (accessData) {
+          setHasAccess(true);
+        }
+      }
+
       setLoading(false);
     };
     fetchContent();
@@ -42,13 +99,13 @@ export default function ContentDetailPage() {
         .from("content")
         .select("id, title, price, type, thumbnail_url, status")
         .eq("status", "published")
-        .neq("id", id)
+        .neq("id", params.id)
         .order("created_at", { ascending: false })
         .limit(4);
       setRelated(data || []);
     };
     fetchRelated();
-  }, [id]);
+  }, [params.id, user, supabase]);
 
   const handlePlayPause = () => {
     if (!videoRef.current) return;
@@ -136,13 +193,13 @@ export default function ContentDetailPage() {
                     </div>
                   </div>
                 ) : content.thumbnail_url ? (
-                  <Image
+                <Image
                     src={supabase.storage.from('files').getPublicUrl(content.thumbnail_url).data.publicUrl}
-                    width={800}
-                    height={600}
+                  width={800}
+                  height={600}
                     alt={content.title}
-                    className="h-full w-full object-cover"
-                  />
+                  className="h-full w-full object-cover"
+                />
                 ) : (
                   <div className="w-full h-64 flex items-center justify-center text-purple-200 bg-gray-800 rounded-lg">No Thumbnail</div>
                 )}
@@ -152,25 +209,25 @@ export default function ContentDetailPage() {
               {Array.from({ length: 5 }).map((_, i) => (
                 <div
                   key={i}
-                  className="relative aspect-square overflow-hidden rounded-md border border-purple-500/30 shadow-[0_0_15px_rgba(168,85,247,0.15)]"
+                  className="relative aspect-square overflow-hidden rounded-md border border-purple-500/30"
                 >
                   {i === 0 ? (
+                    content.thumbnail_url ? (
                     <Image
-                      src={`/placeholder.svg?height=120&width=120`}
+                      src={supabase.storage.from('files').getPublicUrl(content.thumbnail_url).data.publicUrl || ''}
                       width={120}
                       height={120}
-                      alt={`Thumbnail ${i + 1}`}
+                      alt="Main content thumbnail"
                       className="h-full w-full object-cover"
                     />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-gray-800">
+                        <ImageIcon className="h-8 w-8 text-purple-400" />
+                      </div>
+                    )
                   ) : (
                     <>
-                      <Image
-                        src={`/placeholder.svg?height=120&width=120`}
-                        width={120}
-                        height={120}
-                        alt={`Thumbnail ${i + 1}`}
-                        className="h-full w-full object-cover opacity-40"
-                      />
+                      <div className="h-full w-full object-cover bg-gray-800/70" />
                       <div className="absolute inset-0 flex items-center justify-center bg-black/30 backdrop-blur-sm">
                         <div className="text-center text-xs font-medium text-white">Premium</div>
                       </div>
@@ -218,9 +275,21 @@ export default function ContentDetailPage() {
             <div className="space-y-4">
               <div className="text-3xl font-bold text-white">$19.99</div>
               <div className="flex flex-col gap-3 sm:flex-row">
-                <Button className="gap-2 bg-purple-600 hover:bg-purple-700 text-white">
-                  <ShoppingCart className="h-4 w-4" />
-                  Add to Cart
+                <Button
+                  size="lg"
+                  className="w-full bg-paradisePink hover:bg-paradiseGold text-white font-semibold"
+                  onClick={() => {
+                    addToCart(content);
+                    setAddedToCart(true);
+                    setTimeout(() => setAddedToCart(false), 2000);
+                  }}
+                  disabled={addedToCart}
+                >
+                  <ShoppingCart className="mr-2 h-5 w-5" />
+                  {addedToCart ? "Added to Cart!" : "Add to Cart"}
+                </Button>
+                <Button size="lg" variant="outline" className="w-full text-white border-purple-600 hover:bg-purple-700 hover:border-purple-700">
+                  Buy Now - ${content.price?.toFixed(2)}
                 </Button>
                 <Button
                   variant="outline"
@@ -345,13 +414,13 @@ export default function ContentDetailPage() {
                 <div className="overflow-hidden rounded-lg border border-purple-500/30 bg-gray-900 shadow-[0_0_15px_rgba(168,85,247,0.15)]">
                   <div className="relative aspect-[4/3] w-full overflow-hidden">
                     {item.thumbnail_url ? (
-                      <Image
+                    <Image
                         src={supabase.storage.from('files').getPublicUrl(item.thumbnail_url).data.publicUrl}
-                        width={400}
-                        height={300}
+                      width={400}
+                      height={300}
                         alt={item.title}
-                        className="h-full w-full object-cover transition-all duration-300 group-hover:scale-105"
-                      />
+                      className="h-full w-full object-cover transition-all duration-300 group-hover:scale-105"
+                    />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-purple-200">No Thumbnail</div>
                     )}

@@ -36,12 +36,15 @@ export default function SignUpPage() {
     })
     setLoading(false)
     if (error) {
-      setError(error.message || "Signup failed.")
+      setError(error instanceof Error ? error.message : "Signup failed.")
+    } else if (data && "requiresConfirmation" in data && data.requiresConfirmation) {
+      setSuccess(true)
+      setError("Please check your email to confirm your account before signing in.")
     } else {
       setSuccess(true)
       setTimeout(() => {
         window.location.href = "/dashboard"
-      }, 2500)
+      }, 500)
     }
   }
 
@@ -143,7 +146,7 @@ export default function SignUpPage() {
             </div>
             <Button className="w-full bg-purple-600 hover:bg-purple-700 text-white" type="submit" disabled={loading}>{loading ? "Signing up..." : "Sign Up"}</Button>
             {error && <div className="text-red-500 text-sm text-center">{error}</div>}
-            {success && <div className="text-green-500 text-sm text-center">Account created! Check your email to verify.</div>}
+            {success && <div className="text-green-500 text-sm text-center">Account created successfully! Redirecting...</div>}
             <div className="relative flex items-center justify-center">
               <Separator className="bg-purple-700/50" />
               <span className="absolute bg-gray-950 px-2 text-xs text-purple-300">OR CONTINUE WITH</span>
