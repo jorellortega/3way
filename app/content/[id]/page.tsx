@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { ArrowLeft, Heart, Share2, ShoppingCart, Star, Image as ImageIcon } from "lucide-react";
+import { ArrowLeft, Heart, Share2, ShoppingCart, Star, Image as ImageIcon, User as UserIcon } from "lucide-react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { useAuth } from "@/hooks/useAuth";
 import type { Database } from "@/types/supabase";
@@ -24,6 +24,7 @@ interface Content {
   thumbnail_url: string | null;
   content_url: string | null;
   creator: {
+    id: string;
     first_name: string;
     last_name: string;
     profile_image: string | null;
@@ -57,6 +58,7 @@ export default function ContentDetailPage() {
           `
           *,
           creator:users (
+            id,
             first_name,
             last_name,
             profile_image
@@ -254,21 +256,28 @@ export default function ContentDetailPage() {
                 <div className="text-sm text-purple-300">2.5k downloads</div>
               </div>
               <div className="mt-2 flex items-center gap-2">
-                <Link
-                  href="/creators/1"
-                  className="flex items-center gap-2 text-sm font-medium text-purple-300 hover:text-purple-400"
-                >
-                  <div className="relative h-6 w-6 overflow-hidden rounded-full border border-purple-500/50">
-                    <Image
-                      src="/placeholder.svg?height=24&width=24"
-                      width={24}
-                      height={24}
-                      alt="Creator"
-                      className="h-full w-full object-cover"
-                    />
-                  </div>
-                  By Creator Name
-                </Link>
+                {content.creator && (
+                  <Link
+                    href={`/creators/${content.creator.id}`}
+                    className="flex items-center gap-2 text-sm font-medium text-purple-300 hover:text-purple-400"
+                  >
+                    <div className="relative h-8 w-8 overflow-hidden rounded-full border border-purple-500/50 bg-gray-800">
+                      {content.creator.profile_image ? (
+                        <Image
+                          src={supabase.storage.from('files').getPublicUrl(content.creator.profile_image).data.publicUrl || ''}
+                          fill
+                          alt={`${content.creator.first_name} ${content.creator.last_name}`}
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <UserIcon className="h-5 w-5 text-purple-400" />
+                        </div>
+                      )}
+                    </div>
+                    By {`${content.creator.first_name} ${content.creator.last_name}`}
+                  </Link>
+                )}
               </div>
             </div>
 
@@ -288,12 +297,12 @@ export default function ContentDetailPage() {
                   <ShoppingCart className="mr-2 h-5 w-5" />
                   {addedToCart ? "Added to Cart!" : "Add to Cart"}
                 </Button>
-                <Button size="lg" variant="outline" className="w-full text-white border-purple-600 hover:bg-purple-700 hover:border-purple-700">
+                <Button size="lg" variant="outline" className="w-full bg-transparent border-purple-600 text-purple-200 hover:bg-purple-700 hover:text-white">
                   Buy Now - ${content.price?.toFixed(2)}
                 </Button>
                 <Button
                   variant="outline"
-                  className="gap-2 border-purple-500 text-purple-200 hover:bg-purple-900/50 hover:text-white"
+                  className="gap-2 bg-transparent border-purple-600 text-purple-200 hover:bg-purple-700 hover:text-white"
                 >
                   <Heart className="h-4 w-4" />
                   Add to Wishlist
@@ -301,7 +310,7 @@ export default function ContentDetailPage() {
                 <Button
                   variant="outline"
                   size="icon"
-                  className="border-purple-500 text-purple-200 hover:bg-purple-900/50 hover:text-white"
+                  className="bg-transparent border-purple-600 text-purple-200 hover:bg-purple-700 hover:text-white"
                 >
                   <Share2 className="h-4 w-4" />
                   <span className="sr-only">Share</span>

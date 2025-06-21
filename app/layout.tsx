@@ -8,7 +8,6 @@ import { Suspense } from "react"
 import { CartProvider } from "./cart-context"
 import NavBar from "@/components/NavBar"
 import { ThemeProvider } from "@/components/theme-provider"
-import Footer from "@/components/Footer"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -38,26 +37,25 @@ export default function RootLayout({
               <main className="flex-1">
                 <Suspense>{children}</Suspense>
               </main>
-              <Footer />
               <footer className="border-t border-purple-900/40 bg-gray-950 py-6">
                 <div className="container flex flex-col items-center justify-between gap-4 px-4 text-center md:flex-row md:px-6 md:text-left">
                   <div className="flex flex-col items-center gap-4 md:flex-row">
                     <Link href="/" className="flex items-center gap-2 text-lg font-semibold">
                       <span className="text-paradiseGold">Paradise</span><span className="text-paradisePink">Baddies</span>
                     </Link>
-                    <p className="text-sm text-purple-200">© 2025 Paradise Baddies. All rights reserved.</p>
+                    <p className="text-sm text-gray-400">© 2024 Paradise Baddies. All rights reserved.</p>
                   </div>
-                  <div className="flex gap-4">
-                    <Link href="#" className="text-sm text-purple-200 hover:text-purple-400">
+                  <nav className="flex gap-4 sm:gap-6">
+                    <Link className="text-sm hover:underline" href="/terms">
                       Terms
                     </Link>
-                    <Link href="#" className="text-sm text-purple-200 hover:text-purple-400">
+                    <Link className="text-sm hover:underline" href="/privacy">
                       Privacy
                     </Link>
-                    <Link href="#" className="text-sm text-purple-200 hover:text-purple-400">
+                    <Link className="text-sm hover:underline" href="#">
                       Contact
                     </Link>
-                  </div>
+                  </nav>
                 </div>
               </footer>
             </div>

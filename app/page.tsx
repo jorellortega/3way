@@ -88,7 +88,7 @@ export default function Home() {
                   <Button
                     size="lg"
                     variant="outline"
-                    className="border-paradiseGold text-paradiseGold hover:bg-paradiseGold/10 hover:text-paradisePink"
+                    className="border-purple-600 bg-transparent text-purple-200 hover:bg-purple-700 hover:text-white"
                   >
                     View Subscription Plans
                   </Button>
@@ -207,7 +207,11 @@ export default function Home() {
           </div>
           <div className="flex justify-center">
             <Link href="/browse">
-              <Button variant="outline" size="lg" className="border-paradiseGold text-paradiseGold hover:bg-paradiseGold/10 hover:text-paradisePink">
+              <Button
+                variant="outline"
+                size="lg"
+                className="border-purple-600 bg-transparent text-purple-200 hover:bg-purple-700 hover:text-white"
+              >
                 View All Content
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
