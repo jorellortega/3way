@@ -1,12 +1,14 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/lib/supabase";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import type { Database } from "@/types/supabase";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 
 export default function CEOPage() {
   const { user } = useAuth();
+  const [supabase] = useState(() => createClientComponentClient<Database>());
   const [role, setRole] = useState<string | null>(null);
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
