@@ -258,7 +258,7 @@ export default function Dashboard() {
         )}
 
         {/* Account Status */}
-        <div className={`rounded-xl p-6 shadow-md flex items-center justify-between ${profile.first_name !== 'User' ? 'bg-green-100' : 'bg-yellow-100'}`}>
+        <div className={`rounded-xl p-6 shadow-md flex flex-col gap-2 ${profile.first_name !== 'User' ? 'bg-green-100' : 'bg-yellow-100'}`}>
           <div className="flex items-center gap-4">
             {profile.first_name !== 'User' ? (
               <ShieldCheck className="h-8 w-8 text-green-600" />
@@ -275,6 +275,15 @@ export default function Dashboard() {
                   : 'Please complete your profile to become a verified user.'}
               </p>
             </div>
+          </div>
+          {/* Onboarding Steps (mock data, all complete) */}
+          <div className="mt-4">
+            <div className="font-semibold text-green-700 mb-2">Onboarding Steps:</div>
+            <ul className="space-y-1 text-black font-semibold">
+              <li>✅ Step 1: Identity & Age Verified</li>
+              <li>✅ Step 2: Payments Setup</li>
+              <li>✅ Step 3: Terms & Docs Accepted</li>
+            </ul>
           </div>
           {profile.first_name === 'User' && (
             <Link href="/settings">
