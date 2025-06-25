@@ -38,6 +38,8 @@ const mediaPackages = [
 export default function PhotoSessionPage() {
   const [date, setDate] = useState<Date | undefined>(new Date())
   const [selectedPackage, setSelectedPackage] = useState(mediaPackages[1].name)
+  const [location, setLocation] = useState<string>("")
+  const [timeSlot, setTimeSlot] = useState<string>("")
   const [bookingStatus, setBookingStatus] = useState<"idle" | "submitting" | "success">("idle")
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -48,7 +50,9 @@ export default function PhotoSessionPage() {
       name: (e.currentTarget.elements.namedItem('name') as HTMLInputElement).value,
       email: (e.currentTarget.elements.namedItem('email') as HTMLInputElement).value,
       package: selectedPackage,
+      location: location,
       date: date ? format(date, "PPP") : "No date selected",
+      time: timeSlot,
       message: (e.currentTarget.elements.namedItem('message') as HTMLTextAreaElement).value,
     });
     setTimeout(() => {
@@ -139,18 +143,18 @@ export default function PhotoSessionPage() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <Label htmlFor="name" className="text-purple-200">Full Name</Label>
-                      <Input id="name" name="name" placeholder="Your Name" required className="bg-gray-800 border-purple-700" />
+                      <Input id="name" name="name" placeholder="Your Name" required className="bg-gray-800 border-purple-700 placeholder:text-purple-400 text-white" />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="email" className="text-purple-200">Email Address</Label>
-                      <Input id="email" name="email" type="email" placeholder="your@email.com" required className="bg-gray-800 border-purple-700" />
+                      <Input id="email" name="email" type="email" placeholder="your@email.com" required className="bg-gray-800 border-purple-700 placeholder:text-purple-400 text-white" />
                     </div>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <Label className="text-purple-200">Selected Package</Label>
                       <Select value={selectedPackage} onValueChange={setSelectedPackage}>
-                        <SelectTrigger className="w-full bg-gray-800 border-purple-700">
+                        <SelectTrigger className="w-full bg-gray-800 border-purple-700 text-white">
                           <SelectValue placeholder="Select a package" />
                         </SelectTrigger>
                         <SelectContent className="bg-gray-800 border-purple-700 text-white">
@@ -165,8 +169,8 @@ export default function PhotoSessionPage() {
                           <Button
                             variant={"outline"}
                             className={cn(
-                              "w-full justify-start text-left font-normal bg-gray-800 border-purple-700 hover:text-white",
-                              !date && "text-muted-foreground"
+                              "w-full justify-start text-left font-normal bg-gray-800 border-purple-700 hover:text-white text-white",
+                              !date && "text-purple-400"
                             )}
                           >
                             <CalendarIcon className="mr-2 h-4 w-4" />
@@ -186,9 +190,40 @@ export default function PhotoSessionPage() {
                     </div>
                   </div>
 
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="location" className="text-purple-200">Location</Label>
+                      <Select onValueChange={setLocation} value={location}>
+                        <SelectTrigger className="w-full bg-gray-800 border-purple-700 text-white">
+                          <SelectValue placeholder="Select a location" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-gray-800 border-purple-700 text-white">
+                          <SelectItem value="downtown-studio">Downtown Studio (Los Angeles)</SelectItem>
+                          <SelectItem value="santa-monica">Beachside Photoshoot (Santa Monica)</SelectItem>
+                          <SelectItem value="arts-district">Urban Exploration (Arts District)</SelectItem>
+                          <SelectItem value="custom">Your Custom Location (Requires Approval)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="time-slot" className="text-purple-200">Time Slot</Label>
+                      <Select onValueChange={setTimeSlot} value={timeSlot}>
+                        <SelectTrigger className="w-full bg-gray-800 border-purple-700 text-white">
+                          <SelectValue placeholder="Select a time" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-gray-800 border-purple-700 text-white">
+                          <SelectItem value="morning">9:00 AM - 11:00 AM</SelectItem>
+                          <SelectItem value="afternoon">1:00 PM - 3:00 PM</SelectItem>
+                          <SelectItem value="evening">4:00 PM - 6:00 PM</SelectItem>
+                          <SelectItem value="sunset">Sunset Session (Varies)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
                   <div className="space-y-2">
                     <Label htmlFor="message" className="text-purple-200">Additional Information</Label>
-                    <Textarea id="message" name="message" placeholder="Any special requests or details..." className="bg-gray-800 border-purple-700 min-h-[100px]" />
+                    <Textarea id="message" name="message" placeholder="Any special requests or details..." className="bg-gray-800 border-purple-700 min-h-[100px] placeholder:text-purple-400 text-white" />
                   </div>
                   <Button type="submit" size="lg" className="w-full font-semibold" disabled={bookingStatus === "submitting"}>
                     {bookingStatus === "submitting" ? "Submitting..." : "Request Booking"}

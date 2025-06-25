@@ -1,12 +1,13 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { User, Download, ShoppingCart, Heart, Star, Edit, CreditCard, Settings, ArrowRight, Upload, Eye } from "lucide-react";
+import { User, Download, ShoppingCart, Heart, Star, Edit, CreditCard, Settings, ArrowRight, Upload, Eye, ShieldCheck, ShieldAlert } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { useRouter } from "next/navigation";
 import type { Database } from "@/types/supabase";
+import { Button } from "@/components/ui/button";
 
 export default function Dashboard() {
   const { user, loading: authLoading } = useAuth();
@@ -14,6 +15,19 @@ export default function Dashboard() {
   const [supabase] = useState(() => createClientComponentClient<Database>());
   const [profile, setProfile] = useState<{ first_name: string; last_name: string; email: string; role: string } | null>(null);
   const [loading, setLoading] = useState(true);
+  const [editOpen, setEditOpen] = useState(false);
+  const [editFirstName, setEditFirstName] = useState("");
+  const [editLastName, setEditLastName] = useState("");
+  const [editLoading, setEditLoading] = useState(false);
+  const [editError, setEditError] = useState("");
+  const [editSuccess, setEditSuccess] = useState("");
+
+  useEffect(() => {
+    if (profile) {
+      setEditFirstName(profile.first_name);
+      setEditLastName(profile.last_name);
+    }
+  }, [profile]);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -161,7 +175,10 @@ export default function Dashboard() {
             <div className="text-sm text-paradiseGold mt-1">
               Role: {profile.role || 'user'}
             </div>
-            <button className="mt-2 inline-flex items-center gap-1 rounded bg-paradisePink px-3 py-1 text-sm font-semibold text-paradiseWhite hover:bg-paradiseGold hover:text-paradiseBlack transition">
+            <button
+              className="mt-2 inline-flex items-center gap-1 rounded bg-paradisePink px-3 py-1 text-sm font-semibold text-paradiseWhite hover:bg-paradiseGold hover:text-paradiseBlack transition"
+              onClick={() => setEditOpen(true)}
+            >
               <Edit className="h-4 w-4" /> Edit Profile
             </button>
           </div>
@@ -171,6 +188,102 @@ export default function Dashboard() {
             </Link>
           </div>
         </div>
+        {editOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+            <div className="bg-white rounded-lg p-8 shadow-xl max-w-sm w-full text-center">
+              <h2 className="text-xl font-bold text-paradisePink mb-4">Edit Profile</h2>
+              <form
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  setEditLoading(true);
+                  setEditError("");
+                  setEditSuccess("");
+                  const { error } = await supabase
+                    .from("users")
+                    .update({ first_name: editFirstName, last_name: editLastName })
+                    .eq("id", user.id);
+                  setEditLoading(false);
+                  if (error) {
+                    setEditError("Failed to update profile. Please try again.");
+                  } else {
+                    setEditSuccess("Profile updated successfully!");
+                    setProfile((prev) => prev ? { ...prev, first_name: editFirstName, last_name: editLastName } : prev);
+                    setTimeout(() => setEditOpen(false), 1000);
+                  }
+                }}
+                className="space-y-4"
+              >
+                <div>
+                  <label className="block text-paradiseBlack font-semibold mb-1" htmlFor="editFirstName">First Name</label>
+                  <input
+                    id="editFirstName"
+                    type="text"
+                    value={editFirstName}
+                    onChange={e => setEditFirstName(e.target.value)}
+                    className="w-full rounded border-2 border-paradiseGold p-2 text-white bg-paradiseBlack focus:outline-none focus:border-paradisePink"
+                  />
+                </div>
+                <div>
+                  <label className="block text-paradiseBlack font-semibold mb-1" htmlFor="editLastName">Last Name</label>
+                  <input
+                    id="editLastName"
+                    type="text"
+                    value={editLastName}
+                    onChange={e => setEditLastName(e.target.value)}
+                    className="w-full rounded border-2 border-paradiseGold p-2 text-white bg-paradiseBlack focus:outline-none focus:border-paradisePink"
+                  />
+                </div>
+                {editError && <div className="text-red-600 text-sm">{editError}</div>}
+                {editSuccess && <div className="text-green-600 text-sm">{editSuccess}</div>}
+                <div className="flex gap-4 justify-center mt-4">
+                  <button
+                    type="button"
+                    className="px-4 py-2 rounded bg-gray-200 text-gray-800 font-semibold hover:bg-gray-300"
+                    onClick={() => setEditOpen(false)}
+                    disabled={editLoading}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 rounded bg-paradisePink text-white font-semibold hover:bg-paradiseGold hover:text-paradiseBlack"
+                    disabled={editLoading}
+                  >
+                    {editLoading ? "Saving..." : "Save"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* Account Status */}
+        <div className={`rounded-xl p-6 shadow-md flex items-center justify-between ${profile.first_name !== 'User' ? 'bg-green-100' : 'bg-yellow-100'}`}>
+          <div className="flex items-center gap-4">
+            {profile.first_name !== 'User' ? (
+              <ShieldCheck className="h-8 w-8 text-green-600" />
+            ) : (
+              <ShieldAlert className="h-8 w-8 text-yellow-600" />
+            )}
+            <div>
+              <h3 className={`font-bold ${profile.first_name !== 'User' ? 'text-green-800' : 'text-yellow-800'}`}>
+                Account Status: {profile.first_name !== 'User' ? 'Verified' : 'Not Verified'}
+              </h3>
+              <p className={`text-sm ${profile.first_name !== 'User' ? 'text-green-700' : 'text-yellow-700'}`}>
+                {profile.first_name !== 'User'
+                  ? 'Your account is verified and in good standing.'
+                  : 'Please complete your profile to become a verified user.'}
+              </p>
+            </div>
+          </div>
+          {profile.first_name === 'User' && (
+            <Link href="/settings">
+              <Button className="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold">
+                Complete Profile
+              </Button>
+            </Link>
+          )}
+        </div>
 
         {/* Subscription Status */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 rounded-xl bg-paradiseGold/90 p-6 shadow-md">
@@ -178,9 +291,9 @@ export default function Dashboard() {
             <div className="text-lg font-bold text-paradiseBlack">Premium Plan</div>
             <div className="text-paradiseBlack/80">Renews on Nov 15, 2025</div>
           </div>
-          <button className="inline-flex items-center gap-1 rounded bg-paradisePink px-4 py-2 text-sm font-semibold text-paradiseWhite hover:bg-paradiseBlack hover:text-paradiseGold transition">
+          <Link href="/managesubscription" className="inline-flex items-center gap-1 rounded bg-paradisePink px-4 py-2 text-sm font-semibold text-paradiseWhite hover:bg-paradiseBlack hover:text-paradiseGold transition">
             <CreditCard className="h-4 w-4" /> Manage Subscription
-          </button>
+          </Link>
         </div>
 
         {/* Quick Stats */}

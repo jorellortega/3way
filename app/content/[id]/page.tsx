@@ -5,12 +5,13 @@ import { useParams } from "next/navigation";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { ArrowLeft, Heart, Share2, ShoppingCart, Star, Image as ImageIcon, User as UserIcon } from "lucide-react";
+import { ArrowLeft, Heart, Share2, ShoppingCart, Image as ImageIcon, User as UserIcon } from "lucide-react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { useAuth } from "@/hooks/useAuth";
 import type { Database } from "@/types/supabase";
 import { CartContext } from "@/app/cart-context";
 import { useContext } from "react";
+import { StarRating } from "@/components/ui/star-rating";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -72,30 +73,13 @@ export default function ContentDetailPage() {
         setError(contentError.message);
       } else {
         setContent(contentData);
-        // If content is free, user has access
         if (contentData?.price === 0) {
           setHasAccess(true);
         }
       }
-
-      // If user is logged in, check for content access
-      if (user && contentData) {
-        const { data: accessData, error: accessError } = await supabase
-          .from("user_content_access")
-          .select("id")
-          .eq("user_id", user.id)
-          .eq("content_id", contentData.id)
-          .single();
-
-        if (accessData) {
-          setHasAccess(true);
-        }
-      }
-
       setLoading(false);
     };
-    fetchContent();
-    // Fetch related content
+
     const fetchRelated = async () => {
       const { data } = await supabase
         .from("content")
@@ -106,8 +90,30 @@ export default function ContentDetailPage() {
         .limit(4);
       setRelated(data || []);
     };
+
+    fetchContent();
     fetchRelated();
-  }, [params.id, user, supabase]);
+  }, [params.id, supabase]);
+
+  useEffect(() => {
+    const checkAccess = async () => {
+      if (user && content) {
+        const { data: accessData, error: accessError } = await supabase
+          .from("user_content_access")
+          .select("id")
+          .eq("user_id", user.id)
+          .eq("content_id", content.id)
+          .single();
+
+        if (accessData) {
+          setHasAccess(true);
+        }
+      }
+    };
+    if (content) {
+      checkAccess();
+    }
+  }, [user, content, supabase]);
 
   const handlePlayPause = () => {
     if (!videoRef.current) return;
@@ -245,18 +251,14 @@ export default function ContentDetailPage() {
               <h1 className="text-3xl font-bold text-white">{content.title}</h1>
               <div className="mt-2 flex items-center gap-4">
                 <div className="flex items-center gap-1">
-                  <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
-                  <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
-                  <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
-                  <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
-                  <Star className="h-5 w-5 fill-gray-700 stroke-gray-600" />
+                  <StarRating rating={4.2} />
                   <span className="ml-2 text-sm font-medium text-white">4.2</span>
                   <span className="text-sm text-purple-300">(128 reviews)</span>
                 </div>
                 <div className="text-sm text-purple-300">2.5k downloads</div>
               </div>
-              <div className="mt-2 flex items-center gap-2">
-                {content.creator && (
+              {content.creator && (
+                <div className="mt-4">
                   <Link
                     href={`/creators/${content.creator.id}`}
                     className="flex items-center gap-2 text-sm font-medium text-purple-300 hover:text-purple-400"
@@ -275,14 +277,14 @@ export default function ContentDetailPage() {
                         </div>
                       )}
                     </div>
-                    By {`${content.creator.first_name} ${content.creator.last_name}`}
+                    <span>By {`${content.creator.first_name} ${content.creator.last_name}`}</span>
                   </Link>
-                )}
-              </div>
+                </div>
+              )}
             </div>
 
             <div className="space-y-4">
-              <div className="text-3xl font-bold text-white">$19.99</div>
+              <div className="text-3xl font-bold text-white">${content.price?.toFixed(2)}</div>
               <div className="flex flex-col gap-3 sm:flex-row">
                 <Button
                   size="lg"
@@ -316,100 +318,38 @@ export default function ContentDetailPage() {
                   <span className="sr-only">Share</span>
                 </Button>
               </div>
-              <div className="rounded-lg border border-purple-500/30 bg-gray-900/60 p-4 shadow-[0_0_15px_rgba(168,85,247,0.15)]">
-                <h3 className="font-medium text-white">Subscribe to access all content</h3>
-                <p className="mt-1 text-sm text-purple-200">
-                  Get unlimited access to all premium content with a subscription plan.
-                </p>
-                <div className="mt-3">
-                  <Link href="/subscriptions">
+              {!hasAccess && (
+                <div className="rounded-lg bg-purple-900/50 border border-purple-700 p-6 text-center">
+                  <h3 className="text-xl font-bold text-white">Subscribe to access all content</h3>
+                  <p className="mt-2 text-purple-300">
+                    Get unlimited access to all premium content with a subscription plan.
+                  </p>
+                  <Link href="/packages">
                     <Button
-                      variant="outline"
-                      className="w-full border-purple-500 text-purple-200 hover:bg-purple-900/50 hover:text-white"
+                      className="mt-4 w-full bg-white hover:bg-gray-200 text-purple-700 font-semibold"
+                      size="lg"
                     >
                       View Subscription Plans
                     </Button>
                   </Link>
                 </div>
-              </div>
+              )}
             </div>
 
-            <Tabs defaultValue="description">
-              <TabsList className="grid w-full grid-cols-3 bg-gray-900 border-purple-700">
-                <TabsTrigger
-                  value="description"
-                  className="data-[state=active]:bg-purple-800 data-[state=active]:text-white"
-                >
-                  Description
-                </TabsTrigger>
-                <TabsTrigger
-                  value="details"
-                  className="data-[state=active]:bg-purple-800 data-[state=active]:text-white"
-                >
-                  Details
-                </TabsTrigger>
-                <TabsTrigger
-                  value="license"
-                  className="data-[state=active]:bg-purple-800 data-[state=active]:text-white"
-                >
-                  License
-                </TabsTrigger>
+            <Tabs defaultValue="description" className="w-full">
+              <TabsList className="grid w-full grid-cols-3 bg-purple-900/50 text-purple-300">
+                <TabsTrigger value="description">Description</TabsTrigger>
+                <TabsTrigger value="details">Details</TabsTrigger>
+                <TabsTrigger value="license">License</TabsTrigger>
               </TabsList>
-              <TabsContent value="description" className="mt-4 space-y-4 text-purple-200">
-                <p>
-                  This premium digital content features high-quality visuals perfect for your creative projects. Created
-                  by a professional artist with attention to detail and artistic excellence.
-                </p>
-                <p>
-                  The content is delivered in multiple formats to ensure compatibility with various software and
-                  platforms. Whether you're working on a personal project or commercial work, this content will elevate
-                  your designs.
-                </p>
+              <TabsContent value="description" className="py-4 text-purple-200">
+                {content.description}
               </TabsContent>
-              <TabsContent value="details" className="mt-4">
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <div className="font-medium text-white">Format</div>
-                    <div className="text-purple-200">JPEG, PNG, PSD</div>
-                  </div>
-                  <div>
-                    <div className="font-medium text-white">Resolution</div>
-                    <div className="text-purple-200">4K (3840x2160)</div>
-                  </div>
-                  <div>
-                    <div className="font-medium text-white">File Size</div>
-                    <div className="text-purple-200">250 MB</div>
-                  </div>
-                  <div>
-                    <div className="font-medium text-white">Created</div>
-                    <div className="text-purple-200">April 15, 2025</div>
-                  </div>
-                  <div>
-                    <div className="font-medium text-white">Software</div>
-                    <div className="text-purple-200">Adobe Photoshop, Illustrator</div>
-                  </div>
-                  <div>
-                    <div className="font-medium text-white">Tags</div>
-                    <div className="text-purple-200">Abstract, Modern, Digital Art</div>
-                  </div>
-                </div>
+              <TabsContent value="details" className="py-4 text-purple-200">
+                Details about the content.
               </TabsContent>
-              <TabsContent value="license" className="mt-4 space-y-4">
-                <div>
-                  <h3 className="font-medium text-white">Standard License</h3>
-                  <ul className="mt-2 list-inside list-disc space-y-1 text-sm text-purple-200">
-                    <li>Personal and commercial use</li>
-                    <li>Use in a single end product</li>
-                    <li>Lifetime access</li>
-                    <li>Cannot be redistributed or resold</li>
-                  </ul>
-                </div>
-                <div>
-                  <h3 className="font-medium text-white">Extended License</h3>
-                  <p className="mt-1 text-sm text-purple-200">
-                    For extended usage rights, please contact the creator directly.
-                  </p>
-                </div>
+              <TabsContent value="license" className="py-4 text-purple-200">
+                Standard License.
               </TabsContent>
             </Tabs>
           </div>

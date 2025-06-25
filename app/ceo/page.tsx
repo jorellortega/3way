@@ -5,6 +5,9 @@ import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import type { Database } from "@/types/supabase";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
+import Link from 'next/link';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { Settings, Image as ImageIcon } from 'lucide-react';
 
 export default function CEOPage() {
   const { user } = useAuth();
@@ -74,20 +77,49 @@ export default function CEOPage() {
   if (role !== "ceo" && role !== "admin") return <div className="p-8 text-center">Access denied.</div>;
 
   return (
-    <div className="max-w-xl mx-auto py-12">
-      <h1 className="text-3xl font-bold mb-6">Branding Admin</h1>
-      <div className="mb-6 flex flex-col items-center">
-        <div className="w-32 h-32 rounded-full bg-white/30 flex items-center justify-center mb-4 overflow-hidden">
-          {logoUrl ? (
-            <Image src={logoUrl} alt="Logo" width={96} height={96} />
-          ) : (
-            <span className="text-3xl text-paradisePink font-bold">Logo</span>
-          )}
-        </div>
-        <input type="file" accept="image/*" onChange={handleUpload} disabled={uploading} className="mb-2" />
-        <Button onClick={handleDelete} variant="destructive" disabled={!logoUrl}>Delete Logo</Button>
-        {error && <div className="text-red-500 mt-2">{error}</div>}
-        {success && <div className="text-green-500 mt-2">{success}</div>}
+    <div className="max-w-4xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+      <h1 className="text-3xl font-bold mb-8 text-gray-900 dark:text-gray-100">Admin Dashboard</h1>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle>Branding</CardTitle>
+            <ImageIcon className="h-5 w-5 text-gray-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col items-center gap-4">
+              <div className="w-32 h-32 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-4 overflow-hidden">
+                {logoUrl ? (
+                  <Image src={logoUrl} alt="Logo" width={96} height={96} className="object-contain" />
+                ) : (
+                  <span className="text-xl text-gray-500 font-bold">Logo</span>
+                )}
+              </div>
+              <input type="file" id="logo-upload" accept="image/*" onChange={handleUpload} disabled={uploading} className="hidden" />
+              <label htmlFor="logo-upload" className="cursor-pointer">
+                <Button asChild variant="outline">
+                  <span>{uploading ? "Uploading..." : "Upload Logo"}</span>
+                </Button>
+              </label>
+              <Button onClick={handleDelete} variant="destructive" size="sm" disabled={!logoUrl}>Delete Logo</Button>
+              {error && <div className="text-red-500 text-sm mt-2">{error}</div>}
+              {success && <div className="text-green-500 text-sm mt-2">{success}</div>}
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle>Site Settings</CardTitle>
+            <Settings className="h-5 w-5 text-gray-500" />
+          </CardHeader>
+          <CardContent>
+            <CardDescription className="mb-4">
+              Manage other site settings and configurations.
+            </CardDescription>
+            <Link href="/ceo/bookingedit" passHref>
+              <Button>Manage Booking Options</Button>
+            </Link>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

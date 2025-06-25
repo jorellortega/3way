@@ -158,6 +158,9 @@ export default function SignUpPage() {
               Sign in
             </Link>
           </div>
+          <div className="mt-6 text-xs text-center text-purple-400 bg-purple-900/40 border border-purple-800 rounded p-3 transition-colors duration-200 hover:bg-purple-900 hover:text-white hover:border-paradiseGold">
+            <strong>Important:</strong> Before you can publish or sell content, we are required to verify your identity and confirm you are of legal age (18+). This helps us comply with international laws and protect our community. You will be contacted for verification after signup if you wish to become a creator.
+          </div>
         </div>
       </div>
     </div>

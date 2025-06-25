@@ -1,8 +1,17 @@
+"use client";
 import React from "react";
 import { User, Mail, Lock, Bell, Smartphone, Save } from "lucide-react";
 import Image from "next/image";
+import { useState } from "react";
 
 export default function SettingsPage() {
+  const [showConfirm, setShowConfirm] = useState(false);
+
+  const handleDelete = () => {
+    setShowConfirm(false);
+    alert("Account deletion is not implemented yet.");
+  };
+
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-paradisePink via-paradiseGold to-paradiseWhite p-4">
       <div className="w-full max-w-2xl rounded-2xl bg-paradiseWhite bg-opacity-90 p-8 shadow-xl space-y-8">
@@ -51,6 +60,34 @@ export default function SettingsPage() {
         <button className="mt-6 w-full flex items-center justify-center gap-2 rounded bg-paradisePink px-6 py-3 text-lg font-bold text-paradiseWhite hover:bg-paradiseGold hover:text-paradiseBlack transition">
           <Save className="h-5 w-5" /> Save Changes
         </button>
+        <button
+          className="mt-4 w-full flex items-center justify-center gap-2 rounded border-2 border-red-500 bg-transparent px-6 py-3 text-lg font-bold text-red-600 hover:bg-red-500 hover:text-white transition"
+          onClick={() => setShowConfirm(true)}
+        >
+          Delete Account
+        </button>
+        {showConfirm && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+            <div className="bg-white rounded-lg p-8 shadow-xl max-w-sm w-full text-center">
+              <h2 className="text-xl font-bold text-red-600 mb-4">Confirm Account Deletion</h2>
+              <p className="mb-6 text-paradiseBlack">Are you sure you want to delete your account? This action cannot be undone.</p>
+              <div className="flex gap-4 justify-center">
+                <button
+                  className="px-4 py-2 rounded bg-gray-200 text-gray-800 font-semibold hover:bg-gray-300"
+                  onClick={() => setShowConfirm(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="px-4 py-2 rounded bg-red-600 text-white font-semibold hover:bg-red-700"
+                  onClick={handleDelete}
+                >
+                  Yes, Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

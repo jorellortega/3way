@@ -52,7 +52,7 @@ export default function RootLayout({
                     <Link className="text-sm hover:underline" href="/privacy">
                       Privacy
                     </Link>
-                    <Link className="text-sm hover:underline" href="#">
+                    <Link className="text-sm hover:underline" href="/contact">
                       Contact
                     </Link>
                   </nav>
