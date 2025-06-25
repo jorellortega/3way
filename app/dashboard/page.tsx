@@ -280,7 +280,12 @@ export default function Dashboard() {
           <div className="mt-4">
             <div className="font-semibold text-green-700 mb-2">Onboarding Steps:</div>
             <ul className="space-y-1 text-black font-semibold">
-              <li>✅ Step 1: Identity & Age Verified</li>
+              <li>
+                ✅ Step 1: Identity & Age Verified
+                <a href="/onboarding" className="ml-3 inline-block px-2 py-0.5 rounded bg-green-200 text-green-800 text-xs font-bold hover:bg-green-300 transition underline">
+                  Documents submitted
+                </a>
+              </li>
               <li>✅ Step 2: Payments Setup</li>
               <li>✅ Step 3: Terms & Docs Accepted</li>
             </ul>
