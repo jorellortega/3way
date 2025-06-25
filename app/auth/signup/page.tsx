@@ -161,6 +161,20 @@ export default function SignUpPage() {
           <div className="mt-6 text-xs text-center text-purple-400 bg-purple-900/40 border border-purple-800 rounded p-3 transition-colors duration-200 hover:bg-purple-900 hover:text-white hover:border-paradiseGold">
             <strong>Important:</strong> Before you can publish or sell content, we are required to verify your identity and confirm you are of legal age (18+). This helps us comply with international laws and protect our community. You will be contacted for verification after signup if you wish to become a creator.
           </div>
+          {/* How It Works Card */}
+          <div className="mt-8">
+            <a
+              href="/howto"
+              className="block w-full rounded-xl bg-purple-900/40 border border-purple-800 p-3 text-center transition-opacity duration-300"
+              style={{ opacity: 0.15 }}
+              onMouseEnter={e => (e.currentTarget.style.opacity = '1')}
+              onMouseLeave={e => (e.currentTarget.style.opacity = '0.15')}
+            >
+              <h2 className="text-lg font-semibold mb-1 text-purple-200">How Paradise Baddies Works</h2>
+              <p className="mb-1 text-purple-300">New here? Learn how to get started, stay safe, and make the most of our platform.</p>
+              <span className="inline-block mt-1 px-3 py-1 rounded bg-purple-800 text-purple-100 text-xs font-medium">Learn More</span>
+            </a>
+          </div>
         </div>
       </div>
     </div>

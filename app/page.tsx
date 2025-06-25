@@ -556,6 +556,15 @@ export default function Home() {
           </Link>
         </div>
       </section>
+
+      {/* How It Works Card */}
+      <div className="mt-12 flex justify-center">
+        <a href="/howto" className="block w-full max-w-xl rounded-xl bg-purple-900/40 border border-purple-800 p-4 text-center transition">
+          <h2 className="text-xl font-semibold mb-1 text-purple-200">How Paradise Baddies Works</h2>
+          <p className="mb-2 text-purple-300">New here? Learn how to get started, stay safe, and make the most of our platform.</p>
+          <span className="inline-block mt-1 px-4 py-1 rounded bg-purple-800 text-purple-100 text-sm font-medium">Learn More</span>
+        </a>
+      </div>
     </div>
   )
 }
