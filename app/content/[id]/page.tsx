@@ -148,6 +148,13 @@ export default function ContentDetailPage() {
   if (error) return <div className="p-8 text-center text-red-500">{error}</div>;
   if (!content) return <div className="p-8 text-center text-purple-200">Content not found.</div>;
 
+  // Determine if the content_url is a video file
+  const isVideo = typeof content.content_url === 'string' && (
+    content.content_url.endsWith('.mp4') ||
+    content.content_url.endsWith('.webm') ||
+    content.content_url.endsWith('.mov')
+  );
+
   return (
     <div className="bg-gradient-to-br from-gray-950 via-purple-950/80 to-gray-950 min-h-screen">
       <div className="container px-4 py-8 md:px-6 md:py-12">
@@ -162,7 +169,7 @@ export default function ContentDetailPage() {
           <div className="space-y-4">
             <div className="overflow-hidden rounded-lg border border-purple-500/30 shadow-[0_0_15px_rgba(168,85,247,0.15)]">
               <div className="relative aspect-[4/3] w-full">
-                {content.type === 'video' && content.content_url ? (
+                {isVideo ? (
                   <div className="w-full h-full flex flex-col items-center justify-center bg-black">
                     <video
                       ref={videoRef}
@@ -201,13 +208,13 @@ export default function ContentDetailPage() {
                     </div>
                   </div>
                 ) : content.thumbnail_url ? (
-                <Image
-                    src={supabase.storage.from('files').getPublicUrl(content.thumbnail_url).data.publicUrl}
-                  width={800}
-                  height={600}
+                  <Image
+                    src={String(supabase.storage.from('files').getPublicUrl(typeof content.thumbnail_url === 'string' ? content.thumbnail_url : '').data.publicUrl || '')}
+                    width={800}
+                    height={600}
                     alt={content.title}
-                  className="h-full w-full object-cover"
-                />
+                    className="h-full w-full object-cover"
+                  />
                 ) : (
                   <div className="w-full h-64 flex items-center justify-center text-purple-200 bg-gray-800 rounded-lg">No Thumbnail</div>
                 )}

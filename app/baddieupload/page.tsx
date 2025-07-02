@@ -86,9 +86,10 @@ export default function BaddieUploadPage() {
       return
     }
     const safeName = `${profile.first_name}_${profile.last_name}`.replace(/\s+/g, '_').toLowerCase()
+    const sanitizeFileName = (name: string) => encodeURIComponent(name.replace(/\s+/g, "_").replace(/[^\w.-]/g, ""));
     const folder = `baddies/${safeName}_${user.id}`
-    const filePath = `${folder}/${file.name}`
-    const thumbPath = `${folder}/thumbnails/${thumbnail.name}`
+    const filePath = `${folder}/${sanitizeFileName(file.name)}`
+    const thumbPath = `${folder}/thumbnails/${sanitizeFileName(thumbnail.name)}`
     console.log("File paths:", { filePath, thumbPath })
     // Upload main file
     const { error: fileError, data: fileUploadData } = await supabase.storage.from('files').upload(filePath, file, { upsert: true })

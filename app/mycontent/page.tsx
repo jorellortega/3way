@@ -9,12 +9,14 @@ import clsx from "clsx"
 import { useAuth } from "@/hooks/useAuth"
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 import type { Database } from "@/types/supabase"
+import { useRouter } from "next/navigation"
 
 const mockCategories = ["All", "Video", "Photo", "Document", "Audio"];
 
 export default function MyContentPage() {
   const { user } = useAuth();
   const [supabase] = useState(() => createClientComponentClient<Database>())
+  const router = useRouter();
   const [favorites, setFavorites] = useState<number[]>([1, 4]);
   const [activeTab, setActiveTab] = useState<string>("All");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
@@ -82,9 +84,26 @@ export default function MyContentPage() {
   const toggleFavorite = (id: number) => {
     setFavorites((prev) => prev.includes(id) ? prev.filter(f => f !== id) : [...prev, id]);
   }
+  const handleEdit = (item: any) => {
+    router.push(`/mycontent/edit/${item.id}`);
+  };
+  const handleDelete = async (item: any) => {
+    if (!confirm("Are you sure you want to delete this content?")) return;
+    const { error } = await supabase.from("content").delete().eq("id", item.id);
+    if (!error) {
+      setContent(content.filter(c => c.id !== item.id));
+    } else {
+      alert("Delete failed: " + error.message);
+    }
+  };
 
   return (
     <div className="container mx-auto px-4 py-8">
+      <div className="flex justify-end mb-4">
+        <Button asChild variant="default">
+          <a href="/baddieupload">New Upload</a>
+        </Button>
+      </div>
       {/* Tabs and View Toggle */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
         <div className="flex gap-2">
@@ -196,6 +215,14 @@ export default function MyContentPage() {
                   </p>
                 </div>
               </CardContent>
+              <CardFooter className="flex justify-between mt-2">
+                <Button size="sm" variant="outline" onClick={() => handleEdit(item)}>
+                  Edit
+                </Button>
+                <Button size="sm" variant="destructive" onClick={() => handleDelete(item)}>
+                  Delete
+                </Button>
+              </CardFooter>
             </Card>
           ))}
         </div>
