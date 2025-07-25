@@ -13,7 +13,7 @@ export default function Dashboard() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const [supabase] = useState(() => createClientComponentClient<Database>());
-  const [profile, setProfile] = useState<{ first_name: string; last_name: string; email: string; role: string } | null>(null);
+  const [profile, setProfile] = useState<{ first_name: string; last_name: string; email: string; role: string; profile_image?: string | null } | null>(null);
   const [loading, setLoading] = useState(true);
   const [editOpen, setEditOpen] = useState(false);
   const [editFirstName, setEditFirstName] = useState("");
@@ -49,11 +49,11 @@ export default function Dashboard() {
       
       const attemptFetch = async () => {
         console.log('Dashboard - Attempting to fetch profile for user:', user.id);
-      const { data, error } = await supabase
-        .from("users")
-        .select("first_name, last_name, email, role")
-        .eq("id", user.id)
-        .single();
+              const { data, error } = await supabase
+          .from("users")
+          .select("first_name, last_name, email, role, profile_image")
+          .eq("id", user.id)
+          .single();
       
       if (error) {
           console.error('Error fetching profile (attempt ' + (retries + 1) + '):', error);
@@ -163,7 +163,16 @@ export default function Dashboard() {
         {/* User Profile Card */}
         <div className="flex flex-col sm:flex-row items-center gap-6 rounded-2xl bg-paradiseWhite bg-opacity-90 p-6 shadow-xl">
           <div className="relative h-20 w-20 overflow-hidden rounded-full border-4 border-paradiseGold">
-            <Image src="/avatar-placeholder.png" alt="User avatar" fill className="object-cover" />
+            {profile?.profile_image ? (
+              <Image 
+                src={supabase.storage.from('files').getPublicUrl(profile.profile_image).data.publicUrl} 
+                alt="User avatar" 
+                fill 
+                className="object-cover" 
+              />
+            ) : (
+              <Image src="/avatar-placeholder.png" alt="User avatar" fill className="object-cover" />
+            )}
           </div>
           <div className="flex-1 text-center sm:text-left">
             <div className="text-2xl font-bold text-paradisePink">
@@ -175,12 +184,20 @@ export default function Dashboard() {
             <div className="text-sm text-paradiseGold mt-1">
               Role: {profile.role || 'user'}
             </div>
-            <button
-              className="mt-2 inline-flex items-center gap-1 rounded bg-paradisePink px-3 py-1 text-sm font-semibold text-paradiseWhite hover:bg-paradiseGold hover:text-paradiseBlack transition"
-              onClick={() => setEditOpen(true)}
-            >
-              <Edit className="h-4 w-4" /> Edit Profile
-            </button>
+            <div className="flex gap-2 mt-2">
+              <button
+                className="inline-flex items-center gap-1 rounded bg-paradisePink px-3 py-1 text-sm font-semibold text-paradiseWhite hover:bg-paradiseGold hover:text-paradiseBlack transition"
+                onClick={() => setEditOpen(true)}
+              >
+                <Edit className="h-4 w-4" /> Edit Profile
+              </button>
+              <Link
+                href="/settings"
+                className="inline-flex items-center gap-1 rounded bg-paradiseGold px-3 py-1 text-sm font-semibold text-paradiseBlack hover:bg-paradisePink hover:text-paradiseWhite transition"
+              >
+                <Upload className="h-4 w-4" /> Upload Avatar
+              </Link>
+            </div>
           </div>
           <div className="hidden sm:block">
             <Link href="/settings" className="inline-flex items-center gap-1 text-paradiseGold hover:text-paradisePink font-semibold">
@@ -456,6 +473,28 @@ export default function Dashboard() {
             </li>
           </ul>
           </Link>
+        </div>
+
+        {/* My Packages Card */}
+        <div className="rounded-2xl bg-paradiseWhite bg-opacity-90 p-6 shadow-lg">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold text-paradisePink">My Packages</h2>
+            <div className="flex gap-2">
+              <Link href="/packages" className="inline-flex items-center gap-1 rounded bg-paradiseGold px-3 py-1 text-sm font-semibold text-paradiseBlack hover:bg-paradisePink hover:text-paradiseWhite transition">
+                <Eye className="h-4 w-4" /> View All
+              </Link>
+              <Link href="/edit-packages" className="inline-flex items-center gap-1 rounded bg-paradisePink px-3 py-1 text-sm font-semibold text-paradiseWhite hover:bg-paradiseGold hover:text-paradiseBlack transition">
+                <Upload className="h-4 w-4" /> Manage Packages
+              </Link>
+            </div>
+          </div>
+          <div className="text-center py-8">
+            <div className="text-4xl mb-2">📦</div>
+            <p className="text-paradiseBlack/70 mb-4">Create and manage your content packages</p>
+            <Link href="/edit-packages" className="inline-flex items-center gap-2 rounded bg-paradisePink px-4 py-2 font-semibold text-paradiseWhite hover:bg-paradiseGold hover:text-paradiseBlack transition">
+              <Upload className="h-4 w-4" /> Create Your First Package
+            </Link>
+          </div>
         </div>
       </div>
     </div>

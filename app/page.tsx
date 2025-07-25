@@ -24,9 +24,20 @@ interface Content {
   }
 }
 
+interface Creator {
+  id: string
+  first_name: string
+  last_name: string
+  profile_image: string | null
+  bio: string | null
+  role: string
+  is_verified: boolean
+}
+
 export default function Home() {
   const [logoUrl, setLogoUrl] = useState<string | null>(null)
   const [featuredContent, setFeaturedContent] = useState<Content[]>([])
+  const [eliteCreators, setEliteCreators] = useState<Creator[]>([])
   const [supabase] = useState(() => createClientComponentClient<Database>())
 
   useEffect(() => {
@@ -39,6 +50,7 @@ export default function Home() {
       }
     }
     fetchLogo()
+    
     // Fetch featured/recent content
     const fetchFeaturedContent = async () => {
       const { data } = await supabase
@@ -50,6 +62,23 @@ export default function Home() {
       setFeaturedContent(data as any[] || [])
     }
     fetchFeaturedContent()
+    
+    // Fetch elite creators
+    const fetchEliteCreators = async () => {
+      console.log('Fetching elite creators...');
+      const { data, error } = await supabase
+        .from("users")
+        .select("id, first_name, last_name, profile_image, bio, role, is_verified")
+        .eq("role", "creator")
+        .order("created_at", { ascending: false })
+        .limit(6)
+      
+      console.log('Elite creators data:', data);
+      console.log('Elite creators error:', error);
+      
+      setEliteCreators(data as any[] || [])
+    }
+    fetchEliteCreators()
   }, [supabase])
 
   return (
@@ -239,28 +268,40 @@ export default function Home() {
             </div>
           </div>
           <div className="mx-auto grid max-w-5xl grid-cols-2 gap-6 py-12 md:grid-cols-3 lg:grid-cols-4 lg:gap-8">
-            {featuredContent.map((item) => (
-              <Link key={item.id} href={`/content/${item.id}`} className="group">
+            {eliteCreators.map((creator) => (
+              <Link key={creator.id} href={`/creators/${creator.id}`} className="group">
                 <div className="flex flex-col items-center space-y-3">
                   <div className="relative h-24 w-24 overflow-hidden rounded-full border-2 border-paradiseGold shadow-[0_0_15px_rgba(249,200,70,0.3)] md:h-32 md:w-32">
-                    {item.thumbnail_url ? (
-                    <Image
-                        src={supabase.storage.from('files').getPublicUrl(item.thumbnail_url).data.publicUrl}
-                      width={128}
-                      height={128}
-                        alt={item.title}
-                      className="h-full w-full object-cover transition-all duration-300 group-hover:scale-110"
-                    />
+                    {creator.profile_image ? (
+                      <Image
+                        src={supabase.storage.from('files').getPublicUrl(creator.profile_image).data.publicUrl}
+                        width={128}
+                        height={128}
+                        alt={`${creator.first_name} ${creator.last_name}`}
+                        className="h-full w-full object-cover transition-all duration-300 group-hover:scale-110"
+                      />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-paradisePink">No Thumbnail</div>
+                      <div className="w-full h-full flex items-center justify-center text-paradisePink">
+                        <div className="text-center">
+                          <div className="text-2xl mb-1">👤</div>
+                          <div className="text-xs">No Photo</div>
+                        </div>
+                      </div>
+                    )}
+                    {creator.is_verified && (
+                      <div className="absolute -top-1 -right-1 h-6 w-6 rounded-full bg-paradisePink flex items-center justify-center">
+                        <svg className="h-3 w-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                      </div>
                     )}
                   </div>
                   <div className="text-center">
-                    <h3 className="font-medium text-paradisePink">{item.title}</h3>
+                    <h3 className="font-medium text-paradisePink">{creator.first_name} {creator.last_name}</h3>
                     <div className="mt-1 flex items-center justify-center">
-                      <span className="ml-1 text-sm text-paradiseGold">{item.type}</span>
+                      <span className="ml-1 text-sm text-paradiseGold">Creator</span>
                     </div>
-                    <p className="mt-1 text-xs text-paradisePink">${item.price?.toFixed(2)}</p>
+                    <p className="mt-1 text-xs text-paradisePink">{creator.bio || 'Digital content creator'}</p>
                   </div>
                 </div>
               </Link>

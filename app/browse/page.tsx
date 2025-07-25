@@ -16,15 +16,18 @@ export default function BrowsePage() {
   const [supabase] = useState(() => createClientComponentClient<Database>())
   const [addedIndex, setAddedIndex] = useState<number | null>(null);
   const [content, setContent] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchContent = async () => {
+      setLoading(true);
       const { data } = await supabase
         .from("content")
-        .select("id, title, price, type, thumbnail_url, status, users(first_name, last_name)")
+        .select("id, title, description, price, type, thumbnail_url, status, users(first_name, last_name)")
         .eq("status", "published")
         .order("created_at", { ascending: false });
       setContent(data || []);
+      setLoading(false);
     };
     fetchContent();
   }, []);
@@ -93,7 +96,7 @@ export default function BrowsePage() {
             </Select>
           </div>
           <div className="flex items-center gap-2 flex-wrap justify-end md:justify-start w-full md:w-auto">
-            <p className="text-sm text-paradiseWhite">Showing 1-24 of 256 results</p>
+            <p className="text-sm text-paradiseWhite">Showing 1-{content.length} of {content.length} results</p>
             <Tabs defaultValue="grid" className="w-full">
               <TabsList className="grid h-8 w-[120px] grid-cols-2 bg-paradiseWhite border-paradiseGold">
                 <TabsTrigger
@@ -110,8 +113,25 @@ export default function BrowsePage() {
                 </TabsTrigger>
               </TabsList>
               <TabsContent value="grid" className="mt-6">
-                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                  {content.map((item) => (
+                {loading ? (
+                  <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                    {Array.from({ length: 8 }).map((_, i) => (
+                      <div key={i} className="overflow-hidden rounded-lg border border-purple-500/30 bg-gray-900 shadow-[0_0_15px_rgba(168,85,247,0.15)] animate-pulse">
+                        <div className="relative aspect-[4/3] w-full bg-gray-800"></div>
+                        <div className="p-4">
+                          <div className="h-4 bg-gray-800 rounded mb-2"></div>
+                          <div className="h-3 bg-gray-800 rounded mb-2"></div>
+                          <div className="flex justify-between">
+                            <div className="h-3 bg-gray-800 rounded w-16"></div>
+                            <div className="h-3 bg-gray-800 rounded w-12"></div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                    {content.map((item) => (
                     <Link key={item.id} href={`/content/${item.id}`} className="group">
                       <div className="overflow-hidden rounded-lg border border-purple-500/30 bg-gray-900 shadow-[0_0_15px_rgba(168,85,247,0.15)]">
                         <div className="relative aspect-[4/3] w-full overflow-hidden">
@@ -143,29 +163,58 @@ export default function BrowsePage() {
                     </Link>
                   ))}
                 </div>
+                )}
               </TabsContent>
               <TabsContent value="list" className="mt-6">
-                <div className="space-y-4">
-                  {Array.from({ length: 8 }).map((_, i) => (
-                    <Link key={i} href={`/content/${i + 1}`} className="group">
+                {loading ? (
+                  <div className="space-y-4">
+                    {Array.from({ length: 8 }).map((_, i) => (
+                      <div key={i} className="flex overflow-hidden rounded-lg border border-paradiseGold/30 shadow-[0_0_15px_rgba(249,200,70,0.15)] animate-pulse" style={{ backgroundColor: '#141414' }}>
+                        <div className="relative h-32 w-48 overflow-hidden sm:h-40 sm:w-64 bg-gray-800"></div>
+                        <div className="flex flex-1 flex-col justify-between p-4">
+                          <div>
+                            <div className="h-4 bg-gray-800 rounded mb-2"></div>
+                            <div className="h-3 bg-gray-800 rounded mb-2"></div>
+                            <div className="h-3 bg-gray-800 rounded mb-2"></div>
+                          </div>
+                          <div className="mt-4 flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <div className="h-3 bg-gray-800 rounded w-8"></div>
+                              <div className="h-3 bg-gray-800 rounded w-16"></div>
+                            </div>
+                            <div className="h-3 bg-gray-800 rounded w-12"></div>
+                          </div>
+                          <div className="flex gap-2 mt-2">
+                            <div className="flex-1 h-8 bg-gray-800 rounded"></div>
+                            <div className="flex-1 h-8 bg-gray-800 rounded"></div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {content.map((item, i) => (
+                    <Link key={item.id} href={`/content/${item.id}`} className="group">
                       <div className="flex overflow-hidden rounded-lg border border-paradiseGold/30 shadow-[0_0_15px_rgba(249,200,70,0.15)]" style={{ backgroundColor: '#141414' }}>
                         <div className="relative h-32 w-48 overflow-hidden sm:h-40 sm:w-64">
-                          <Image
-                            src={`/placeholder.svg?height=160&width=256`}
-                            width={256}
-                            height={160}
-                            alt={`Content ${i + 1}`}
-                            className="h-full w-full object-cover transition-all duration-300 group-hover:scale-105"
-                          />
-                          {/* Blurred overlay for other images */}
-                          {i % 3 !== 0 && (
-                            <div className="absolute inset-0 flex items-center justify-center bg-paradiseBlack/50 backdrop-blur-md">
-                              <div className="rounded-full bg-paradisePink px-4 py-2 text-sm font-medium text-paradiseWhite">
-                                Subscribe to View
+                          {item.thumbnail_url ? (
+                            <Image
+                              src={supabase.storage.from('files').getPublicUrl(item.thumbnail_url).data.publicUrl || ''}
+                              width={256}
+                              height={160}
+                              alt={item.title}
+                              className="h-full w-full object-cover transition-all duration-300 group-hover:scale-105"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-paradiseGold">
+                              <div className="text-center">
+                                <div className="text-2xl mb-1">📁</div>
+                                <div className="text-xs">No Thumbnail</div>
                               </div>
                             </div>
                           )}
-                          {i % 4 === 0 && (
+                          {item.type === 'premium' && (
                             <div className="absolute right-2 top-2 rounded-full bg-paradisePink px-2 py-1 text-xs font-medium text-paradiseWhite">
                               Premium
                             </div>
@@ -173,10 +222,14 @@ export default function BrowsePage() {
                         </div>
                         <div className="flex flex-1 flex-col justify-between p-4">
                           <div>
-                            <h3 className="font-medium text-paradisePink">Digital Content Title {i + 1}</h3>
-                            <p className="mt-1 text-sm text-paradiseGold">By Creator Name</p>
+                            <h3 className="font-medium text-paradisePink">{item.title}</h3>
+                            {item.users && (
+                              <p className="mt-1 text-sm text-paradiseGold">
+                                By {`${item.users.first_name} ${item.users.last_name}`}
+                              </p>
+                            )}
                             <p className="mt-2 line-clamp-2 text-sm text-paradiseGold">
-                              This premium digital content features high-quality visuals perfect for your creative projects.
+                              {item.description || 'Premium digital content for your creative projects.'}
                             </p>
                           </div>
                           <div className="mt-4 flex items-center justify-between">
@@ -184,7 +237,7 @@ export default function BrowsePage() {
                               <span className="text-xs text-paradiseGold">4.8 ★</span>
                               <span className="text-xs text-paradiseGold">1.2k downloads</span>
                             </div>
-                            <p className="font-medium text-paradisePink">$9.99</p>
+                            <p className="font-medium text-paradisePink">${item.price?.toFixed(2) || '0.00'}</p>
                           </div>
                           <div className="flex gap-2 mt-2">
                             <Button
@@ -194,9 +247,9 @@ export default function BrowsePage() {
                                 if (typeof window !== 'undefined') {
                                   const cart = JSON.parse(localStorage.getItem('cart') || '[]');
                                   cart.push({
-                                    id: i + 1,
-                                    name: `Digital Content Title ${i + 1}`,
-                                    price: 9.99,
+                                    id: item.id,
+                                    name: item.title,
+                                    price: item.price,
                                   });
                                   localStorage.setItem('cart', JSON.stringify(cart));
                                   setAddedIndex(i);
@@ -214,9 +267,9 @@ export default function BrowsePage() {
                                 if (typeof window !== 'undefined') {
                                   localStorage.setItem('cart', JSON.stringify([
                                     {
-                                      id: i + 1,
-                                      name: `Digital Content Title ${i + 1}`,
-                                      price: 9.99,
+                                      id: item.id,
+                                      name: item.title,
+                                      price: item.price,
                                     },
                                   ]));
                                   window.location.href = '/checkout';
@@ -231,6 +284,7 @@ export default function BrowsePage() {
                     </Link>
                   ))}
                 </div>
+                )}
               </TabsContent>
             </Tabs>
           </div>

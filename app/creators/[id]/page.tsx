@@ -13,6 +13,7 @@ import clsx from "clsx";
 
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { AvatarUpload } from "@/components/ui/avatar-upload"
 
 export default function CreatorProfilePage() {
   const params = useParams();
@@ -30,6 +31,8 @@ export default function CreatorProfilePage() {
   const bioTextareaRef = useRef<HTMLTextAreaElement | null>(null);
   const [avatarError, setAvatarError] = useState('');
   const [creatorContent, setCreatorContent] = useState<any[]>([]);
+  const [creatorPackages, setCreatorPackages] = useState<any[]>([]);
+  const [packagesLoading, setPackagesLoading] = useState(false);
 
   useEffect(() => {
     const fetchCreator = async () => {
@@ -70,10 +73,39 @@ export default function CreatorProfilePage() {
         .from("content")
         .select("id, title, price, type, thumbnail_url, status, created_at")
         .eq("creator_id", id)
+        .neq("type", "package") // Exclude packages from content
         .order("created_at", { ascending: false });
       setCreatorContent(data || []);
     };
     fetchContent();
+  }, [id, supabase]);
+
+  // Fetch packages for the creator
+  useEffect(() => {
+    if (!id) return;
+    const fetchPackages = async () => {
+      setPackagesLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from("content")
+          .select("id, title, description, price, type, thumbnail_url, status, created_at")
+          .eq("creator_id", id)
+          .eq("type", "package")
+          .eq("status", "published")
+          .order("created_at", { ascending: false });
+        
+        if (error) {
+          console.error('Error fetching packages:', error);
+        } else {
+          setCreatorPackages(data || []);
+        }
+      } catch (error) {
+        console.error('Error fetching packages:', error);
+      } finally {
+        setPackagesLoading(false);
+      }
+    };
+    fetchPackages();
   }, [id, supabase]);
 
   // Save bio on blur or Enter
@@ -135,7 +167,6 @@ export default function CreatorProfilePage() {
   if (loading) return <div className="p-8 text-center">Loading...</div>;
   if (error) return <div className="p-8 text-center text-red-500">{error}</div>;
   if (!creator) return <div className="p-8 text-center text-purple-200">Creator not found.</div>;
-  if (!user) return <div className="p-8 text-center text-red-500">You must be signed in to edit your profile.</div>;
 
   return (
     <div className="container px-4 py-8 md:px-6 md:py-12">
@@ -149,34 +180,29 @@ export default function CreatorProfilePage() {
         </Link>
       </div>
 
-      <div className="mb-8 flex flex-col items-center gap-6 md:flex-row md:items-start">
-        <div className="relative h-32 w-32 overflow-hidden rounded-full md:h-40 md:w-40 group cursor-pointer">
-          <label className="block h-full w-full cursor-pointer">
-            <Image
-              src={
-                creator.profile_image
-                  ? supabase.storage.from('files').getPublicUrl(creator.profile_image).data.publicUrl || "/placeholder.svg?height=160&width=160"
-                  : "/placeholder.svg?height=160&width=160"
-              }
-              width={160}
-              height={160}
-              alt="Creator profile"
-              className="h-full w-full object-cover"
-              onClick={isOwner ? () => document.getElementById('avatar-upload')?.click() : undefined}
+              <div className="mb-8 flex flex-col items-center gap-6 md:flex-row md:items-start">
+          {isOwner ? (
+            <AvatarUpload
+              currentAvatarUrl={creator?.profile_image}
+              userId={creator.id}
+              onAvatarUpdate={(newAvatarUrl) => setCreator({ ...creator, profile_image: newAvatarUrl })}
+              size="lg"
             />
-            {isOwner && (
-              <>
-                <input id="avatar-upload" type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
-                {avatarPreview && (
-                  <button type="button" className="absolute bottom-2 right-2 bg-red-600 text-white rounded-full p-1" onClick={handleAvatarDelete}>
-                    Remove
-                  </button>
-                )}
-              </>
-            )}
-          </label>
-          {isOwner ? null : <div className="text-red-500 text-sm mt-2">You are not the owner of this profile. (user.id: {user?.id}, profile id: {id})</div>}
-        </div>
+          ) : (
+            <div className="relative h-32 w-32 overflow-hidden rounded-full md:h-40 md:w-40">
+              <Image
+                src={
+                  creator.profile_image
+                    ? supabase.storage.from('files').getPublicUrl(creator.profile_image).data.publicUrl || "/placeholder.svg?height=160&width=160"
+                    : "/placeholder.svg?height=160&width=160"
+                }
+                width={160}
+                height={160}
+                alt="Creator profile"
+                className="h-full w-full object-cover"
+              />
+            </div>
+          )}
         <div className="flex flex-1 flex-col items-center text-center md:items-start md:text-left">
           <h1 className="text-3xl font-bold">{creator.first_name} {creator.last_name}</h1>
           <p className="mt-2 text-gray-500 dark:text-gray-400">Digital Artist & Photographer</p>
@@ -278,88 +304,115 @@ export default function CreatorProfilePage() {
           )}
         </TabsContent>
         <TabsContent value="packages" className="mt-6">
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="rounded-lg border bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-950">
-                <h3 className="text-xl font-bold">{["Basic", "Premium", "Ultimate"][i]} Package</h3>
-                <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                  {i === 0 && "A collection of 5 essential items for beginners."}
-                  {i === 1 && "A curated set of 15 premium items for professionals."}
-                  {i === 2 && "The complete collection of 30+ items with exclusive content."}
-                </p>
-                <div className="mt-4">
-                  <span className="text-3xl font-bold">${[29.99, 59.99, 99.99][i]}</span>
+          {packagesLoading ? (
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="rounded-lg border bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-950 animate-pulse">
+                  <div className="h-6 bg-gray-300 rounded mb-2"></div>
+                  <div className="h-4 bg-gray-300 rounded mb-4"></div>
+                  <div className="h-8 bg-gray-300 rounded mb-4"></div>
+                  <div className="space-y-2">
+                    <div className="h-3 bg-gray-300 rounded"></div>
+                    <div className="h-3 bg-gray-300 rounded"></div>
+                    <div className="h-3 bg-gray-300 rounded"></div>
+                  </div>
                 </div>
-                <ul className="mt-4 space-y-2 text-sm">
-                  <li className="flex items-center">
-                    <svg
-                      className="mr-2 h-4 w-4 text-teal-600 dark:text-teal-400"
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <polyline points="20 6 9 17 4 12"></polyline>
-                    </svg>
-                    {[5, 15, 30][i]}+ premium items
-                  </li>
-                  <li className="flex items-center">
-                    <svg
-                      className="mr-2 h-4 w-4 text-teal-600 dark:text-teal-400"
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <polyline points="20 6 9 17 4 12"></polyline>
-                    </svg>
-                    {["Standard", "High", "Maximum"][i]} resolution
-                  </li>
-                  <li className="flex items-center">
-                    <svg
-                      className="mr-2 h-4 w-4 text-teal-600 dark:text-teal-400"
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <polyline points="20 6 9 17 4 12"></polyline>
-                    </svg>
-                    {i > 0 ? "Commercial usage" : "Personal usage only"}
-                  </li>
-                  {i > 1 && (
-                    <li className="flex items-center">
-                      <svg
-                        className="mr-2 h-4 w-4 text-teal-600 dark:text-teal-400"
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <polyline points="20 6 9 17 4 12"></polyline>
-                      </svg>
-                      Exclusive content
-                    </li>
-                  )}
-                </ul>
-                <div className="mt-6">
-                  <Button className="w-full bg-teal-600 hover:bg-teal-700">Buy Package</Button>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : creatorPackages.length > 0 ? (
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {creatorPackages.map((pkg) => (
+                <Card key={pkg.id} className="bg-gray-900 border-purple-900/40 hover:border-purple-500 transition-colors">
+                  <CardHeader>
+                    <div className="aspect-video relative overflow-hidden rounded-lg mb-4">
+                      {pkg.thumbnail_url ? (
+                        <Image
+                          src={supabase.storage.from('files').getPublicUrl(pkg.thumbnail_url).data.publicUrl || ''}
+                          alt={pkg.title}
+                          fill
+                          className="object-cover w-full h-full"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-purple-200">
+                          <div className="text-center">
+                            <div className="text-2xl mb-1">📦</div>
+                            <div className="text-xs">No Preview</div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    <CardTitle className="text-white text-xl font-bold">{pkg.title}</CardTitle>
+                    <CardDescription className="text-purple-200">
+                      {pkg.description}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="mt-4">
+                      <span className="text-3xl font-bold text-paradisePink">${pkg.price?.toFixed(2)}</span>
+                    </div>
+                    <ul className="mt-4 space-y-2 text-sm text-purple-200">
+                      <li className="flex items-center">
+                        <svg
+                          className="mr-2 h-4 w-4 text-teal-600 dark:text-teal-400"
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                        Premium content package
+                      </li>
+                      <li className="flex items-center">
+                        <svg
+                          className="mr-2 h-4 w-4 text-teal-600 dark:text-teal-400"
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                        High resolution
+                      </li>
+                      <li className="flex items-center">
+                        <svg
+                          className="mr-2 h-4 w-4 text-teal-600 dark:text-teal-400"
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                        Commercial license
+                      </li>
+                    </ul>
+                    <div className="mt-6">
+                      <Button className="w-full bg-paradisePink hover:bg-paradiseGold text-paradiseWhite">
+                        Buy Package
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <div className="text-6xl mb-4">📦</div>
+              <h3 className="text-xl font-medium text-paradisePink mb-2">No Packages Available</h3>
+              <p className="text-paradiseGold">This creator hasn't published any packages yet.</p>
+            </div>
+          )}
         </TabsContent>
         <TabsContent value="about" className="mt-6 max-w-3xl space-y-4">
           <h2 className="text-xl font-bold">About Creator Name</h2>
