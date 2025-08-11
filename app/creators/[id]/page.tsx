@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import Image from "next/image"
-import { ArrowLeft, MessageCircle, Star, UserPlus } from "lucide-react"
+import { ArrowLeft, Star, UserPlus } from "lucide-react"
 import { useEffect, useState, useRef } from "react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import type { Database } from "@/types/supabase";
@@ -242,13 +242,14 @@ export default function CreatorProfilePage() {
             </p>
           )}
           <div className="mt-6 flex flex-wrap gap-3">
-            <Button className="gap-2 bg-teal-600 hover:bg-teal-700">
-              <UserPlus className="h-4 w-4" />
-              Subscribe
-            </Button>
-            <Button variant="outline" className="gap-2">
-              <MessageCircle className="h-4 w-4" />
-              Message
+            <Button 
+              asChild
+              className="gap-2 bg-paradisePink hover:bg-paradiseGold text-white"
+            >
+              <Link href={`/subscriptions?creator=${id}`}>
+                <UserPlus className="h-4 w-4" />
+                Subscribe
+              </Link>
             </Button>
           </div>
         </div>
@@ -415,7 +416,7 @@ export default function CreatorProfilePage() {
           )}
         </TabsContent>
         <TabsContent value="about" className="mt-6 max-w-3xl space-y-4">
-          <h2 className="text-xl font-bold">About Creator Name</h2>
+          <h2 className="text-xl font-bold">About {creator?.first_name} {creator?.last_name}</h2>
           <p>
             I'm a professional digital artist with over 10 years of experience in creating premium digital content. My
             work spans across various styles including abstract art, photography, and digital illustrations.
@@ -430,6 +431,96 @@ export default function CreatorProfilePage() {
             customers receive content that exceeds expectations. I regularly update my portfolio with fresh, innovative
             designs to keep my collection current and relevant.
           </p>
+
+          {/* Subscription Tiers Section */}
+          <div className="mt-8 space-y-4">
+            <h3 className="text-lg font-medium text-paradisePink">Subscription Tiers</h3>
+            <p className="text-gray-600 dark:text-gray-400">
+              Support my work and get exclusive benefits with monthly subscriptions:
+            </p>
+            
+            <div className="grid gap-4 md:grid-cols-3">
+              {/* Supporter Tier */}
+              <div className="p-4 border border-paradiseGold/30 rounded-lg bg-gray-800/50">
+                <h4 className="font-semibold text-paradisePink mb-2">Supporter</h4>
+                <div className="text-2xl font-bold text-paradiseGold mb-2">$4.99<span className="text-sm text-gray-400">/month</span></div>
+                <ul className="text-sm text-gray-300 space-y-1 mb-4">
+                  <li>• Exclusive behind-the-scenes content</li>
+                  <li>• Early access to new releases</li>
+                  <li>• Supporter badge on profile</li>
+                  <li>• Monthly creator update</li>
+                </ul>
+                <Button 
+                  asChild
+                  size="sm"
+                  className="w-full bg-paradisePink hover:bg-paradiseGold text-white"
+                >
+                  <Link href={`/subscriptions?creator=${id}`}>
+                    Subscribe to Supporter
+                  </Link>
+                </Button>
+              </div>
+
+              {/* Fan Tier */}
+              <div className="p-4 border-2 border-paradisePink rounded-lg bg-paradisePink/10 relative">
+                <div className="absolute -top-2 left-1/2 transform -translate-x-1/2">
+                  <span className="bg-paradisePink text-white text-xs px-2 py-1 rounded-full">Most Popular</span>
+                </div>
+                <h4 className="font-semibold text-paradisePink mb-2">Fan</h4>
+                <div className="text-2xl font-bold text-paradiseGold mb-2">$9.99<span className="text-sm text-gray-400">/month</span></div>
+                <ul className="text-sm text-gray-300 space-y-1 mb-4">
+                  <li>• All Supporter benefits</li>
+                  <li>• Exclusive creator content</li>
+                  <li>• Direct message access</li>
+                  <li>• Custom creator requests</li>
+                  <li>• Monthly Q&A sessions</li>
+                </ul>
+                <Button 
+                  asChild
+                  size="sm"
+                  className="w-full bg-paradisePink hover:bg-paradiseGold text-white"
+                >
+                  <Link href={`/subscriptions?creator=${id}`}>
+                    Subscribe to Fan
+                  </Link>
+                </Button>
+              </div>
+
+              {/* VIP Tier */}
+              <div className="p-4 border border-paradiseGold/30 rounded-lg bg-gray-800/50">
+                <h4 className="font-semibold text-paradisePink mb-2">VIP</h4>
+                <div className="text-2xl font-bold text-paradiseGold mb-2">$19.99<span className="text-sm text-gray-400">/month</span></div>
+                <ul className="text-sm text-gray-300 space-y-1 mb-4">
+                  <li>• All Fan benefits</li>
+                  <li>• Priority creator support</li>
+                  <li>• Exclusive merchandise</li>
+                  <li>• Personal creator shoutout</li>
+                  <li>• Quarterly creator calls</li>
+                  <li>• Custom content creation</li>
+                </ul>
+                <Button 
+                  asChild
+                  size="sm"
+                  className="w-full bg-paradisePink hover:bg-paradiseGold text-white"
+                >
+                  <Link href={`/subscriptions?creator=${id}`}>
+                    Subscribe to VIP
+                  </Link>
+                </Button>
+              </div>
+            </div>
+
+            <div className="mt-6 text-center">
+              <Button 
+                asChild
+                className="bg-gradient-to-r from-paradisePink to-paradiseGold hover:from-paradiseGold hover:to-paradisePink text-white"
+              >
+                <Link href={`/subscriptions?creator=${id}`}>
+                  View All Subscription Options
+                </Link>
+              </Button>
+            </div>
+          </div>
 
           <div className="mt-6 space-y-4">
             <h3 className="text-lg font-medium">Specialties</h3>

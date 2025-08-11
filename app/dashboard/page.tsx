@@ -21,6 +21,8 @@ export default function Dashboard() {
   const [editLoading, setEditLoading] = useState(false);
   const [editError, setEditError] = useState("");
   const [editSuccess, setEditSuccess] = useState("");
+  const [subscriptionTiers, setSubscriptionTiers] = useState<any[]>([]);
+  const [tiersLoading, setTiersLoading] = useState(false);
 
   useEffect(() => {
     if (profile) {
@@ -28,6 +30,36 @@ export default function Dashboard() {
       setEditLastName(profile.last_name);
     }
   }, [profile]);
+
+  // Fetch subscription tiers when profile is loaded and user is a creator
+  useEffect(() => {
+    if (profile?.role === 'creator' && user) {
+      fetchSubscriptionTiers();
+    }
+  }, [profile, user]);
+
+  const fetchSubscriptionTiers = async () => {
+    try {
+      setTiersLoading(true);
+      const { data, error } = await supabase
+        .from('subscription_tiers')
+        .select('*')
+        .eq('creator_id', user?.id)
+        .eq('is_active', true)
+        .order('price', { ascending: true });
+
+      if (error) {
+        console.error('Error fetching subscription tiers:', error);
+        return;
+      }
+
+      setSubscriptionTiers(data || []);
+    } catch (err) {
+      console.error('Error fetching subscription tiers:', err);
+    } finally {
+      setTiersLoading(false);
+    }
+  };
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -161,7 +193,7 @@ export default function Dashboard() {
     <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-paradisePink via-paradiseGold to-paradiseWhite p-4">
       <div className="w-full max-w-4xl space-y-8">
         {/* User Profile Card */}
-        <div className="flex flex-col sm:flex-row items-center gap-6 rounded-2xl bg-paradiseWhite bg-opacity-90 p-6 shadow-xl">
+        <div className="flex flex-col sm:flex-row items-center gap-6 rounded-2xl bg-[#141414] border border-paradiseGold/30 p-6 shadow-xl">
           <div className="relative h-20 w-20 overflow-hidden rounded-full border-4 border-paradiseGold">
             {profile?.profile_image ? (
               <Image 
@@ -178,7 +210,7 @@ export default function Dashboard() {
             <div className="text-2xl font-bold text-paradisePink">
               {loading ? "Loading..." : profile ? `${profile.first_name} ${profile.last_name}` : ""}
             </div>
-            <div className="text-paradiseBlack/80">
+            <div className="text-white">
               {loading ? "" : profile ? profile.email : ""}
             </div>
             <div className="text-sm text-paradiseGold mt-1">
@@ -275,18 +307,18 @@ export default function Dashboard() {
         )}
 
         {/* Account Status */}
-        <div className={`rounded-xl p-6 shadow-md flex flex-col gap-2 ${profile.first_name !== 'User' ? 'bg-green-100' : 'bg-yellow-100'}`}>
+        <div className="rounded-xl bg-[#141414] border border-paradiseGold/30 p-6 shadow-md flex flex-col gap-2">
           <div className="flex items-center gap-4">
             {profile.first_name !== 'User' ? (
-              <ShieldCheck className="h-8 w-8 text-green-600" />
+              <ShieldCheck className="h-8 w-8 text-green-400" />
             ) : (
-              <ShieldAlert className="h-8 w-8 text-yellow-600" />
+              <ShieldAlert className="h-8 w-8 text-yellow-400" />
             )}
             <div>
-              <h3 className={`font-bold ${profile.first_name !== 'User' ? 'text-green-800' : 'text-yellow-800'}`}>
+              <h3 className={`font-bold ${profile.first_name !== 'User' ? 'text-green-400' : 'text-yellow-400'}`}>
                 Account Status: {profile.first_name !== 'User' ? 'Verified' : 'Not Verified'}
               </h3>
-              <p className={`text-sm ${profile.first_name !== 'User' ? 'text-green-700' : 'text-yellow-700'}`}>
+              <p className={`text-sm ${profile.first_name !== 'User' ? 'text-green-300' : 'text-yellow-300'}`}>
                 {profile.first_name !== 'User'
                   ? 'Your account is verified and in good standing.'
                   : 'Please complete your profile to become a verified user.'}
@@ -295,17 +327,17 @@ export default function Dashboard() {
           </div>
           {/* Onboarding Steps (mock data, all complete) */}
           <div className="mt-4">
-            <div className="font-semibold text-green-700 mb-2">Onboarding Steps:</div>
-            <ul className="space-y-1 text-black font-semibold">
+            <div className="font-semibold text-green-400 mb-2">Onboarding Steps:</div>
+            <ul className="space-y-1 text-white font-semibold">
               <li>
                 ✅ Step 1: Identity & Age Verified
-                <a href="/onboarding" className="ml-3 inline-block px-2 py-0.5 rounded bg-green-200 text-green-800 text-xs font-bold hover:bg-green-300 transition underline">
+                <a href="/onboarding" className="ml-3 inline-block px-2 py-0.5 rounded bg-green-500/20 text-green-400 text-xs font-bold hover:bg-green-500/30 transition underline">
                   Documents submitted
                 </a>
               </li>
               <li>
                 ✅ Step 2: Payments Setup
-                <a href="/payments" className="ml-3 inline-block px-2 py-0.5 rounded bg-green-200 text-green-800 text-xs font-bold hover:bg-green-300 transition underline">
+                <a href="/payments" className="ml-3 inline-block px-2 py-0.5 rounded bg-green-500/20 text-green-400 text-xs font-bold hover:bg-green-500/30 transition underline">
                   Manage payments
                 </a>
               </li>
@@ -365,7 +397,7 @@ export default function Dashboard() {
         </div>
 
         {/* Recent Purchases */}
-        <div className="rounded-2xl bg-paradiseWhite bg-opacity-90 p-6 shadow-lg">
+        <div className="rounded-2xl bg-[#141414] border border-paradiseGold/30 p-6 shadow-lg">
           <h2 className="text-xl font-bold text-paradisePink mb-4">Recent Purchases</h2>
           <ul className="space-y-4">
             <li className="flex items-center gap-4">
@@ -373,8 +405,8 @@ export default function Dashboard() {
                 <Image src="/purchase1.jpg" alt="Purchase 1" fill className="object-cover" />
               </div>
               <div className="flex-1">
-                <div className="font-semibold text-paradiseBlack">City Nightscape Photo Collection</div>
-                <div className="text-sm text-paradiseBlack/70">Purchased 2 days ago</div>
+                <div className="font-semibold text-white">City Nightscape Photo Collection</div>
+                <div className="text-sm text-gray-300">Purchased 2 days ago</div>
               </div>
               <button className="inline-flex items-center gap-1 rounded bg-paradiseGold px-3 py-1 text-sm font-semibold text-paradiseBlack hover:bg-paradisePink hover:text-paradiseWhite transition">
                 <Download className="h-4 w-4" /> Download
@@ -385,8 +417,8 @@ export default function Dashboard() {
                 <Image src="/purchase2.jpg" alt="Purchase 2" fill className="object-cover" />
               </div>
               <div className="flex-1">
-                <div className="font-semibold text-paradiseBlack">3D Model Asset Bundle</div>
-                <div className="text-sm text-paradiseBlack/70">Purchased 1 week ago</div>
+                <div className="font-semibold text-white">3D Model Asset Bundle</div>
+                <div className="text-sm text-gray-300">Purchased 1 week ago</div>
               </div>
               <button className="inline-flex items-center gap-1 rounded bg-paradiseGold px-3 py-1 text-sm font-semibold text-paradiseBlack hover:bg-paradisePink hover:text-paradiseWhite transition">
                 <Download className="h-4 w-4" /> Download
@@ -397,8 +429,8 @@ export default function Dashboard() {
                 <Image src="/purchase3.jpg" alt="Purchase 3" fill className="object-cover" />
               </div>
               <div className="flex-1">
-                <div className="font-semibold text-paradiseBlack">Abstract Digital Art Pack</div>
-                <div className="text-sm text-paradiseBlack/70">Purchased 2 weeks ago</div>
+                <div className="font-semibold text-white">Abstract Digital Art Pack</div>
+                <div className="text-sm text-gray-300">Purchased 2 weeks ago</div>
               </div>
               <button className="inline-flex items-center gap-1 rounded bg-paradiseGold px-3 py-1 text-sm font-semibold text-paradiseBlack hover:bg-paradisePink hover:text-paradiseWhite transition">
                 <Download className="h-4 w-4" /> Download
@@ -408,29 +440,29 @@ export default function Dashboard() {
         </div>
 
         {/* Recent Activity */}
-        <div className="rounded-2xl bg-paradiseWhite bg-opacity-90 p-6 shadow-lg">
+        <div className="rounded-2xl bg-[#141414] border border-paradiseGold/30 p-6 shadow-lg">
           <h2 className="text-xl font-bold text-paradisePink mb-4">Recent Activity</h2>
           <ul className="space-y-4">
             <li className="flex items-center gap-4">
               <Star className="h-6 w-6 text-paradiseGold" />
-              <span className="text-paradiseBlack">Rated a creator: <span className="font-semibold text-paradisePink">DigitalDesigner</span></span>
+              <span className="text-white">Rated a creator: <span className="font-semibold text-paradisePink">DigitalDesigner</span></span>
               <span className="ml-auto text-sm text-paradiseGold">2 hours ago</span>
             </li>
             <li className="flex items-center gap-4">
               <Download className="h-6 w-6 text-paradisePink" />
-              <span className="text-paradiseBlack">Downloaded <span className="font-semibold text-paradiseGold">City Nightscape Photo Collection</span></span>
+              <span className="text-white">Downloaded <span className="font-semibold text-paradiseGold">City Nightscape Photo Collection</span></span>
               <span className="ml-auto text-sm text-paradiseGold">Yesterday</span>
             </li>
             <li className="flex items-center gap-4">
               <ShoppingCart className="h-6 w-6 text-paradiseGold" />
-              <span className="text-paradiseBlack">Purchased <span className="font-semibold text-paradisePink">3D Model Asset Bundle</span></span>
+              <span className="text-white">Purchased <span className="font-semibold text-paradisePink">3D Model Asset Bundle</span></span>
               <span className="ml-auto text-sm text-paradiseGold">2 days ago</span>
             </li>
           </ul>
         </div>
 
         {/* My Content Card */}
-        <div className="rounded-2xl bg-paradiseWhite bg-opacity-90 p-6 shadow-lg">
+        <div className="rounded-2xl bg-[#141414] border border-paradiseGold/30 p-6 shadow-lg">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold text-paradisePink">My Content</h2>
             <div className="flex gap-2">
@@ -444,31 +476,31 @@ export default function Dashboard() {
           </div>
           <Link href="/mycontent" className="block">
           <ul className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-              <li className="rounded-lg border-2 border-paradiseGold overflow-hidden bg-paradiseWhite shadow hover:border-paradisePink transition">
+              <li className="rounded-lg border-2 border-paradiseGold overflow-hidden bg-[#141414] shadow hover:border-paradisePink transition">
               <div className="relative h-28 w-full">
                 <Image src="/mycontent1.jpg" alt="Content 1" fill className="object-cover" />
               </div>
               <div className="p-3">
-                <div className="font-semibold text-paradiseBlack">Urban Sunset</div>
-                <div className="text-xs text-paradiseBlack/60">Uploaded 3 days ago</div>
+                <div className="font-semibold text-white">Urban Sunset</div>
+                <div className="text-xs text-gray-300">Uploaded 3 days ago</div>
               </div>
             </li>
-              <li className="rounded-lg border-2 border-paradiseGold overflow-hidden bg-paradiseWhite shadow hover:border-paradisePink transition">
+              <li className="rounded-lg border-2 border-paradiseGold overflow-hidden bg-[#141414] shadow hover:border-paradisePink transition">
               <div className="relative h-28 w-full">
                 <Image src="/mycontent2.jpg" alt="Content 2" fill className="object-cover" />
               </div>
               <div className="p-3">
-                <div className="font-semibold text-paradiseBlack">Neon Dreams</div>
-                <div className="text-xs text-paradiseBlack/60">Uploaded 1 week ago</div>
+                <div className="font-semibold text-white">Neon Dreams</div>
+                <div className="text-xs text-gray-300">Uploaded 1 week ago</div>
               </div>
             </li>
-              <li className="rounded-lg border-2 border-paradiseGold overflow-hidden bg-paradiseWhite shadow hover:border-paradisePink transition">
+              <li className="rounded-lg border-2 border-paradiseGold overflow-hidden bg-[#141414] shadow hover:border-paradisePink transition">
               <div className="relative h-28 w-full">
                 <Image src="/mycontent3.jpg" alt="Content 3" fill className="object-cover" />
               </div>
               <div className="p-3">
-                <div className="font-semibold text-paradiseBlack">Abstract Flow</div>
-                <div className="text-xs text-paradiseBlack/60">Uploaded 2 weeks ago</div>
+                <div className="font-semibold text-white">Abstract Flow</div>
+                <div className="text-xs text-gray-300">Uploaded 2 weeks ago</div>
               </div>
             </li>
           </ul>
@@ -476,26 +508,154 @@ export default function Dashboard() {
         </div>
 
         {/* My Packages Card */}
-        <div className="rounded-2xl bg-paradiseWhite bg-opacity-90 p-6 shadow-lg">
+        <div className="rounded-2xl bg-[#141414] border border-paradiseGold/30 p-6 shadow-lg">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold text-paradisePink">My Packages</h2>
             <div className="flex gap-2">
               <Link href="/packages" className="inline-flex items-center gap-1 rounded bg-paradiseGold px-3 py-1 text-sm font-semibold text-paradiseBlack hover:bg-paradisePink hover:text-paradiseWhite transition">
                 <Eye className="h-4 w-4" /> View All
               </Link>
-              <Link href="/edit-packages" className="inline-flex items-center gap-1 rounded bg-paradisePink px-3 py-1 text-sm font-semibold text-paradiseWhite hover:bg-paradiseGold hover:text-paradiseBlack transition">
+              <Link href="/edit-packages" className="inline-flex items-center gap-1 rounded bg-paradiseGold px-3 py-1 text-sm font-semibold text-paradiseBlack hover:bg-paradiseGold hover:text-paradiseBlack transition">
                 <Upload className="h-4 w-4" /> Manage Packages
               </Link>
             </div>
           </div>
           <div className="text-center py-8">
             <div className="text-4xl mb-2">📦</div>
-            <p className="text-paradiseBlack/70 mb-4">Create and manage your content packages</p>
+            <p className="text-gray-300 mb-4">Create and manage your content packages</p>
             <Link href="/edit-packages" className="inline-flex items-center gap-2 rounded bg-paradisePink px-4 py-2 font-semibold text-paradiseWhite hover:bg-paradiseGold hover:text-paradiseBlack transition">
               <Upload className="h-4 w-4" /> Create Your First Package
             </Link>
           </div>
         </div>
+
+        {/* Creator Subscription Management Card - Only show for creators */}
+        {profile?.role === 'creator' && (
+          <div className="rounded-2xl bg-[#141414] border border-paradiseGold/30 p-6 shadow-lg">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-paradisePink">Subscription Tiers</h2>
+              <div className="flex gap-2">
+                <Link href="/subscriptions" className="inline-flex items-center gap-1 rounded bg-paradiseGold px-3 py-1 text-sm font-semibold text-paradiseBlack hover:bg-paradisePink hover:text-paradiseWhite transition">
+                  <Eye className="h-4 w-4" /> View Public Page
+                </Link>
+                <Link href="/edit-subscriptions" className="inline-flex items-center gap-1 rounded bg-paradisePink px-3 py-1 text-sm font-semibold text-paradiseWhite hover:bg-paradiseGold hover:text-paradiseBlack transition">
+                  <Settings className="h-4 w-4" /> Manage Tiers
+                </Link>
+              </div>
+            </div>
+            
+            {/* Current Subscription Tiers Display */}
+            {tiersLoading ? (
+              <div className="text-center py-8">
+                <div className="text-paradiseGold">Loading subscription tiers...</div>
+              </div>
+            ) : subscriptionTiers.length === 0 ? (
+              <div className="text-center py-8">
+                <div className="text-4xl mb-2">📊</div>
+                <div className="text-paradisePink font-semibold mb-2">No Subscription Tiers Yet</div>
+                <div className="text-gray-300 mb-4">Create your first subscription tier to start earning from supporters</div>
+                <Link href="/edit-subscriptions" className="inline-flex items-center gap-2 rounded bg-paradisePink px-4 py-2 font-semibold text-paradiseWhite hover:bg-paradiseGold hover:text-paradiseBlack transition">
+                  <Settings className="h-4 w-4" /> Create First Tier
+                </Link>
+              </div>
+            ) : (
+              <div className="grid gap-4 md:grid-cols-3 mb-6">
+                {subscriptionTiers.map((tier) => (
+                  <div key={tier.id} className={`p-4 border rounded-lg bg-[#1a1a1a] ${tier.popular ? 'border-2 border-paradisePink' : 'border-paradiseGold/30'}`}>
+                    {tier.popular && (
+                      <div className="absolute -top-2 left-1/2 transform -translate-x-1/2">
+                        <span className="bg-paradisePink text-white text-xs px-2 py-1 rounded-full">Most Popular</span>
+                      </div>
+                    )}
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="font-semibold text-paradisePink">{tier.name}</h4>
+                      <span className={`text-xs px-2 py-1 rounded ${tier.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                        {tier.is_active ? 'Active' : 'Inactive'}
+                      </span>
+                    </div>
+                    <div className="text-lg font-bold text-paradiseGold mb-2">${tier.price}<span className="text-sm text-gray-400">/month</span></div>
+                    <div className="text-xs text-gray-300 mb-3">
+                      {tier.benefits?.slice(0, 4).map((benefit: string, index: number) => (
+                        <div key={index}>• {benefit}</div>
+                      ))}
+                      {tier.benefits && tier.benefits.length > 4 && (
+                        <div className="text-paradiseGold">+{tier.benefits.length - 4} more benefits</div>
+                      )}
+                    </div>
+                    <div className="text-xs text-paradiseGold font-medium">{tier.subscriber_count || 0} active subscribers</div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Subscription Stats */}
+            {!tiersLoading && subscriptionTiers.length > 0 && (
+              <div className="grid grid-cols-3 gap-4 p-4 bg-[#1a1a1a] rounded-lg mb-6">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-paradisePink">
+                    {subscriptionTiers.reduce((sum, tier) => sum + (tier.subscriber_count || 0), 0)}
+                  </div>
+                  <div className="text-xs text-gray-300">Total Subscribers</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-paradiseGold">
+                    ${subscriptionTiers.reduce((sum, tier) => sum + ((tier.price || 0) * (tier.subscriber_count || 0)), 0).toFixed(2)}
+                  </div>
+                  <div className="text-xs text-gray-300">Monthly Revenue</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-paradisePink">
+                    ${(subscriptionTiers.reduce((sum, tier) => sum + ((tier.price || 0) * (tier.subscriber_count || 0)), 0) * 12).toFixed(2)}
+                  </div>
+                  <div className="text-xs text-gray-300">Annual Revenue</div>
+                </div>
+              </div>
+            )}
+
+            <div className="text-center">
+              <Link href="/edit-subscriptions" className="inline-flex items-center gap-2 rounded bg-paradisePink px-6 py-3 font-semibold text-paradiseWhite hover:bg-paradiseGold hover:text-paradiseBlack transition">
+                <Settings className="h-5 w-5" /> Customize Subscription Tiers
+              </Link>
+            </div>
+          </div>
+        )}
+
+        {/* Creator Upgrade Card - Show for non-creators */}
+        {profile?.role !== 'creator' && (
+          <div className="rounded-2xl bg-[#141414] border border-paradiseGold/30 p-6 shadow-lg">
+            <div className="text-center">
+              <div className="text-4xl mb-4">🎨</div>
+              <h2 className="text-xl font-bold text-paradisePink mb-2">Become a Creator</h2>
+              <p className="text-gray-300 mb-4">
+                Start earning from your content by creating subscription tiers for your supporters.
+              </p>
+              <button
+                onClick={async () => {
+                  try {
+                    const { error } = await supabase
+                      .from('users')
+                      .update({ role: 'creator' })
+                      .eq('id', user.id);
+                    
+                    if (error) {
+                      console.error('Error updating role:', error);
+                      alert('Failed to upgrade to creator. Please try again.');
+                    } else {
+                      setProfile(prev => prev ? { ...prev, role: 'creator' } : prev);
+                      alert('Congratulations! You are now a creator. You can now manage subscription tiers.');
+                    }
+                  } catch (err) {
+                    console.error('Error:', err);
+                    alert('Failed to upgrade to creator. Please try again.');
+                  }
+                }}
+                className="inline-flex items-center gap-2 rounded bg-paradisePink px-6 py-3 font-semibold text-paradiseWhite hover:bg-paradiseGold hover:text-paradiseBlack transition"
+              >
+                <Star className="h-5 w-5" /> Upgrade to Creator
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

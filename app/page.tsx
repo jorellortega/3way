@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import Image from "next/image"
-import { ArrowRight, Crown, Star, TrendingUp, ShoppingCart, Video } from "lucide-react"
+import { ArrowRight, Crown, Star, TrendingUp, ShoppingCart, Check } from "lucide-react"
 import { useEffect, useState } from "react"
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 import type { Database } from "@/types/supabase"
@@ -32,6 +32,15 @@ interface Creator {
   bio: string | null
   role: string
   is_verified: boolean
+  subscription_tiers?: Array<{
+    id: string
+    name: string
+    price: number
+    description: string
+    benefits: string[]
+    popular?: boolean
+    is_active: boolean
+  }>
 }
 
 export default function Home() {
@@ -76,7 +85,33 @@ export default function Home() {
       console.log('Elite creators data:', data);
       console.log('Elite creators error:', error);
       
-      setEliteCreators(data as any[] || [])
+      if (data && data.length > 0) {
+        // Fetch subscription tiers for each creator
+        const creatorsWithTiers = await Promise.all(
+          data.map(async (creator) => {
+            const { data: tiersData } = await supabase
+              .from('subscription_tiers')
+              .select('id, name, price, description, benefits, popular, is_active')
+              .eq('creator_id', creator.id)
+              .eq('is_active', true)
+              .order('price', { ascending: true });
+
+            return {
+              ...creator,
+              subscription_tiers: tiersData || []
+            };
+          })
+        );
+
+        // Filter to only show creators with active tiers
+        const creatorsWithActiveTiers = creatorsWithTiers.filter(
+          creator => creator.subscription_tiers.length > 0
+        );
+
+        setEliteCreators(creatorsWithActiveTiers);
+      } else {
+        setEliteCreators([]);
+      }
     }
     fetchEliteCreators()
   }, [supabase])
@@ -318,283 +353,119 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Subscription Plans */}
+      {/* Creator Subscriptions */}
       <section className="py-12 md:py-16 lg:py-20 relative">
         <div className="absolute inset-0 bg-grid-white/[0.02] -z-10"></div>
         <div className="container px-4 md:px-6 relative z-10">
-          <div className="flex flex-col items-center justify-center space-y-4 text-center">
-            <div className="space-y-2">
+          <div className="flex flex-col items-center justify-center space-y-8 text-center">
+            <div className="space-y-4">
               <h2 className="text-3xl font-bold tracking-tighter text-paradisePink sm:text-4xl md:text-5xl">
-                Choose Your Plan
+                Support Your Favorite Creators
               </h2>
               <p className="max-w-[900px] text-paradiseWhite md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-                Subscribe for unlimited access or purchase individual content.
+                Subscribe to individual creators for exclusive content, behind-the-scenes access, and more. Each creator offers their own unique subscription tiers.
               </p>
             </div>
-          </div>
-          <div className="mx-auto grid max-w-5xl grid-cols-1 gap-6 py-12 md:grid-cols-3 lg:gap-8">
-            {/* Basic Plan */}
-            <div className="flex flex-col rounded-lg border border-paradiseGold/30 bg-paradiseWhite/60 p-6 shadow-[0_0_15px_rgba(59,130,246,0.15)]">
-              <div className="mb-4">
-                <h3 className="text-xl font-bold text-paradisePink">Basic</h3>
-                <p className="text-sm text-paradiseGold">For casual browsers</p>
-              </div>
-              <div className="mb-4">
-                <span className="text-4xl font-bold text-paradisePink">$9.99</span>
-                <span className="text-paradiseGold">/month</span>
-              </div>
-              <ul className="mb-6 space-y-2 text-sm text-paradiseGold">
-                <li className="flex items-center">
-                  <svg
-                    className="mr-2 h-4 w-4 text-paradisePink"
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <polyline points="20 6 9 17 4 12"></polyline>
-                  </svg>
-                  Access to standard content
-                </li>
-                <li className="flex items-center">
-                  <svg
-                    className="mr-2 h-4 w-4 text-paradisePink"
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <polyline points="20 6 9 17 4 12"></polyline>
-                  </svg>
-                  10 downloads per month
-                </li>
-                <li className="flex items-center">
-                  <svg
-                    className="mr-2 h-4 w-4 text-paradisePink"
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <polyline points="20 6 9 17 4 12"></polyline>
-                  </svg>
-                  Standard resolution
-                </li>
-              </ul>
-              <Link href="/subscriptions/basic" className="mt-auto">
-                <Button className="w-full bg-paradisePink hover:bg-paradiseGold text-paradiseWhite">Subscribe Now</Button>
+            
+            <div className="flex flex-col sm:flex-row gap-4">
+              <Link href="/creators">
+                <Button className="bg-paradisePink hover:bg-paradiseGold text-white font-semibold px-8 py-3 text-lg">
+                  Browse Creators
+                </Button>
               </Link>
-            </div>
-            {/* Premium Plan */}
-            <div className="relative flex flex-col rounded-lg border border-paradiseGold bg-paradiseWhite/60 p-6 shadow-[0_0_20px_rgba(59,130,246,0.3)]">
-              <div className="absolute -top-4 left-0 right-0 mx-auto w-fit rounded-full bg-paradisePink px-3 py-1 text-xs font-semibold text-paradiseWhite">
-                Most Popular
-              </div>
-              <div className="mb-4">
-                <h3 className="text-xl font-bold text-paradisePink">Premium</h3>
-                <p className="text-sm text-paradiseGold">For enthusiasts</p>
-              </div>
-              <div className="mb-4">
-                <span className="text-4xl font-bold text-paradisePink">$19.99</span>
-                <span className="text-paradiseGold">/month</span>
-              </div>
-              <ul className="mb-6 space-y-2 text-sm text-paradiseGold">
-                <li className="flex items-center">
-                  <svg
-                    className="mr-2 h-4 w-4 text-paradisePink"
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <polyline points="20 6 9 17 4 12"></polyline>
-                  </svg>
-                  Access to premium content
-                </li>
-                <li className="flex items-center">
-                  <svg
-                    className="mr-2 h-4 w-4 text-paradisePink"
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <polyline points="20 6 9 17 4 12"></polyline>
-                  </svg>
-                  50 downloads per month
-                </li>
-                <li className="flex items-center">
-                  <svg
-                    className="mr-2 h-4 w-4 text-paradisePink"
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <polyline points="20 6 9 17 4 12"></polyline>
-                  </svg>
-                  High resolution
-                </li>
-                <li className="flex items-center">
-                  <svg
-                    className="mr-2 h-4 w-4 text-paradisePink"
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <polyline points="20 6 9 17 4 12"></polyline>
-                  </svg>
-                  Early access to new content
-                </li>
-              </ul>
-              <Link href="/subscriptions/premium" className="mt-auto">
-                <Button className="w-full bg-paradisePink hover:bg-paradiseGold text-paradiseWhite">Subscribe Now</Button>
-              </Link>
-            </div>
-            {/* Pro Plan */}
-            <div className="flex flex-col rounded-lg border border-paradiseGold/30 bg-paradiseWhite/60 p-6 shadow-[0_0_15px_rgba(59,130,246,0.15)]">
-              <div className="mb-4">
-                <h3 className="text-xl font-bold text-paradisePink">Pro</h3>
-                <p className="text-sm text-paradiseGold">For professionals</p>
-              </div>
-              <div className="mb-4">
-                <span className="text-4xl font-bold text-paradisePink">$39.99</span>
-                <span className="text-paradiseGold">/month</span>
-              </div>
-              <ul className="mb-6 space-y-2 text-sm text-paradiseGold">
-                <li className="flex items-center">
-                  <svg
-                    className="mr-2 h-4 w-4 text-paradisePink"
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <polyline points="20 6 9 17 4 12"></polyline>
-                  </svg>
-                  Access to all content
-                </li>
-                <li className="flex items-center">
-                  <svg
-                    className="mr-2 h-4 w-4 text-paradisePink"
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <polyline points="20 6 9 17 4 12"></polyline>
-                  </svg>
-                  Unlimited downloads
-                </li>
-                <li className="flex items-center">
-                  <svg
-                    className="mr-2 h-4 w-4 text-paradisePink"
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <polyline points="20 6 9 17 4 12"></polyline>
-                  </svg>
-                  Maximum resolution
-                </li>
-                <li className="flex items-center">
-                  <svg
-                    className="mr-2 h-4 w-4 text-paradisePink"
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <polyline points="20 6 9 17 4 12"></polyline>
-                  </svg>
-                  Commercial usage rights
-                </li>
-                <li className="flex items-center">
-                  <svg
-                    className="mr-2 h-4 w-4 text-paradisePink"
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <polyline points="20 6 9 17 4 12"></polyline>
-                  </svg>
-                  Priority support
-                </li>
-              </ul>
-              <Link href="/subscriptions/pro" className="mt-auto">
-                <Button className="w-full bg-paradisePink hover:bg-paradiseGold text-paradiseWhite">Subscribe Now</Button>
+              <Link href="/subscriptions">
+                <Button variant="outline" className="border-paradiseGold text-paradiseGold hover:bg-paradiseGold/10 px-8 py-3 text-lg">
+                  View All Subscriptions
+                </Button>
               </Link>
             </div>
           </div>
-        </div>
-      </section>
 
-      {/* Book a Photoshoot Section */}
-      <section className="py-12 md:py-16 lg:py-20">
-        <div className="container px-4 md:px-6">
-          <Link href="/photosession" className="group block">
-            <Card className="bg-gray-900/50 border-purple-800/50 overflow-hidden transition-all duration-300 hover:border-paradisePink hover:shadow-[0_0_20px_rgba(236,72,153,0.3)]">
-              <div className="grid md:grid-cols-2">
-                <div className="p-8 md:p-12">
-                  <div className="inline-block rounded-lg bg-paradisePink/20 px-3 py-1 text-sm text-paradisePink border border-paradisePink/50 mb-4">
-                    New Service
-                  </div>
-                  <h3 className="text-3xl font-bold text-white">Photo & Video Sessions</h3>
-                  <p className="mt-2 text-purple-200">
-                    Need stunning photos or videos to sell? Book a professional session and get content ready for your store.
-                  </p>
-                  <div className="mt-6">
-                    <div className="inline-flex items-center gap-2 text-lg font-semibold text-paradisePink">
-                      Book Your Session
-                      <ArrowRight className="h-5 w-5 transition-transform duration-300 group-hover:translate-x-1" />
+          {/* Featured Creator Subscriptions */}
+          {eliteCreators.length > 0 && (
+            <div className="mt-16">
+              <h3 className="text-2xl font-bold text-paradiseGold mb-8 text-center">
+                Featured Creator Subscriptions
+              </h3>
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto">
+                {eliteCreators.slice(0, 3).map((creator) => (
+                  <div key={creator.id} className="bg-[#141414] rounded-xl border-2 border-paradisePink/30 p-6 shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105">
+                    {/* Creator Info at top */}
+                    <div className="text-center mb-6">
+                      <div className="relative mx-auto mb-4">
+                        <div className="w-16 h-16 mx-auto rounded-full overflow-hidden border-2 border-paradiseGold">
+                          {creator.profile_image ? (
+                            <Image
+                              src={supabase.storage.from('files').getPublicUrl(creator.profile_image).data.publicUrl || ''}
+                              alt={`${creator.first_name} ${creator.last_name}`}
+                              width={64}
+                              height={64}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full bg-paradiseGold/20 flex items-center justify-center">
+                              <span className="text-lg text-paradiseGold font-bold">
+                                {creator.first_name[0]}{creator.last_name[0]}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                        {creator.is_verified && (
+                          <div className="absolute -top-1 -right-1 bg-paradisePink rounded-full p-1">
+                            <Check className="h-2 w-2 text-white" />
+                          </div>
+                        )}
+                      </div>
+                      
+                      <h3 className="text-lg font-bold text-paradisePink mb-1">
+                        {creator.first_name} {creator.last_name}
+                      </h3>
+                      {creator.bio && (
+                        <p className="text-sm text-paradiseGold mb-2 line-clamp-2">
+                          {creator.bio}
+                        </p>
+                      )}
                     </div>
+
+                    {/* Subscription Tier Preview */}
+                    <div className="p-4 rounded-lg border-2 bg-[#141414] border-paradiseGold/50 mb-4">
+                      <div className="text-center mb-3">
+                        <h4 className="font-semibold text-white mb-1">
+                          {creator.subscription_tiers?.[0]?.name || 'Basic Tier'}
+                        </h4>
+                        {creator.subscription_tiers?.[0]?.description && (
+                          <p className="text-xs text-paradiseGold mb-2">
+                            {creator.subscription_tiers[0].description}
+                          </p>
+                        )}
+                        <div className="text-2xl font-bold text-paradisePink">
+                          ${creator.subscription_tiers?.[0]?.price || '0.00'}
+                          <span className="text-sm text-paradiseGold">/month</span>
+                        </div>
+                      </div>
+                      
+                      {creator.subscription_tiers?.[0]?.benefits && creator.subscription_tiers[0].benefits.length > 0 && (
+                        <ul className="space-y-2 mb-4">
+                          {creator.subscription_tiers[0].benefits.slice(0, 2).map((benefit, index) => (
+                            <li key={index} className="flex items-start text-xs text-paradiseGold">
+                              <Check className="h-3 w-3 text-paradisePink mr-2 mt-0.5 flex-shrink-0" />
+                              <span>{benefit}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+
+                    <Link href={`/subscriptions?creator=${creator.id}`}>
+                      <Button className="w-full bg-paradisePink hover:bg-paradiseGold text-white font-semibold transition-all duration-200">
+                        View All Tiers
+                      </Button>
+                    </Link>
                   </div>
-                </div>
-                <div className="relative h-64 md:h-auto bg-gradient-to-tr from-purple-900 via-purple-800/80 to-paradisePink/60 flex items-center justify-center">
-                  <Video className="h-32 w-32 text-white/20" strokeWidth={1.5} />
-                </div>
+                ))}
               </div>
-            </Card>
-          </Link>
+            </div>
+          )}
         </div>
       </section>
 

@@ -173,7 +173,7 @@ export default function ContentDetailPage() {
                   <div className="w-full h-full flex flex-col items-center justify-center bg-black">
                     <video
                       ref={videoRef}
-                      src={supabase.storage.from('files').getPublicUrl(content.content_url).data.publicUrl}
+                      src={content.content_url ? supabase.storage.from('files').getPublicUrl(content.content_url).data.publicUrl : ''}
                       width={800}
                       height={600}
                       className="rounded-lg w-full h-auto max-h-[480px] bg-black"
@@ -229,7 +229,7 @@ export default function ContentDetailPage() {
                   {i === 0 ? (
                     content.thumbnail_url ? (
                     <Image
-                      src={supabase.storage.from('files').getPublicUrl(content.thumbnail_url).data.publicUrl || ''}
+                      src={content.thumbnail_url ? supabase.storage.from('files').getPublicUrl(content.thumbnail_url).data.publicUrl : ''}
                       width={120}
                       height={120}
                       alt="Main content thumbnail"
