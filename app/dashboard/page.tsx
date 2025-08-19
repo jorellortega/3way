@@ -306,52 +306,54 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Account Status */}
-        <div className="rounded-xl bg-[#141414] border border-paradiseGold/30 p-6 shadow-md flex flex-col gap-2">
-          <div className="flex items-center gap-4">
-            {profile.first_name !== 'User' ? (
-              <ShieldCheck className="h-8 w-8 text-green-400" />
-            ) : (
-              <ShieldAlert className="h-8 w-8 text-yellow-400" />
-            )}
-            <div>
-              <h3 className={`font-bold ${profile.first_name !== 'User' ? 'text-green-400' : 'text-yellow-400'}`}>
-                Account Status: {profile.first_name !== 'User' ? 'Verified' : 'Not Verified'}
-              </h3>
-              <p className={`text-sm ${profile.first_name !== 'User' ? 'text-green-300' : 'text-yellow-300'}`}>
-                {profile.first_name !== 'User'
-                  ? 'Your account is verified and in good standing.'
-                  : 'Please complete your profile to become a verified user.'}
-              </p>
+        {/* Account Status - Only for creators */}
+        {profile?.role === 'creator' && (
+          <div className="rounded-xl bg-[#141414] border border-paradiseGold/30 p-6 shadow-md flex flex-col gap-2">
+            <div className="flex items-center gap-4">
+              {profile.first_name !== 'User' ? (
+                <ShieldCheck className="h-8 w-8 text-green-400" />
+              ) : (
+                <ShieldAlert className="h-8 w-8 text-yellow-400" />
+              )}
+              <div>
+                <h3 className={`font-bold ${profile.first_name !== 'User' ? 'text-green-400' : 'text-yellow-400'}`}>
+                  Account Status: {profile.first_name !== 'User' ? 'Verified' : 'Not Verified'}
+                </h3>
+                <p className={`text-sm ${profile.first_name !== 'User' ? 'text-green-300' : 'text-yellow-300'}`}>
+                  {profile.first_name !== 'User'
+                    ? 'Your account is verified and in good standing.'
+                    : 'Please complete your profile to become a verified user.'}
+                </p>
+              </div>
             </div>
+            {/* Onboarding Steps (mock data, all complete) */}
+            <div className="mt-4">
+              <div className="font-semibold text-green-400 mb-2">Onboarding Steps:</div>
+              <ul className="space-y-1 text-white font-semibold">
+                <li>
+                  ✅ Step 1: Identity & Age Verified
+                  <a href="/onboarding" className="ml-3 inline-block px-2 py-0.5 rounded bg-green-500/20 text-green-400 text-xs font-bold hover:bg-green-500/30 transition underline">
+                    Documents submitted
+                  </a>
+                </li>
+                <li>
+                  ✅ Step 2: Payments Setup
+                  <a href="/payments" className="ml-3 inline-block px-2 py-0.5 rounded bg-green-500/20 text-green-400 text-xs font-bold hover:bg-green-500/30 transition underline">
+                    Manage payments
+                  </a>
+                </li>
+                <li>✅ Step 3: Terms & Docs Accepted</li>
+              </ul>
+            </div>
+            {profile.first_name === 'User' && (
+              <Link href="/settings">
+                <Button className="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold">
+                  Complete Profile
+                </Button>
+              </Link>
+            )}
           </div>
-          {/* Onboarding Steps (mock data, all complete) */}
-          <div className="mt-4">
-            <div className="font-semibold text-green-400 mb-2">Onboarding Steps:</div>
-            <ul className="space-y-1 text-white font-semibold">
-              <li>
-                ✅ Step 1: Identity & Age Verified
-                <a href="/onboarding" className="ml-3 inline-block px-2 py-0.5 rounded bg-green-500/20 text-green-400 text-xs font-bold hover:bg-green-500/30 transition underline">
-                  Documents submitted
-                </a>
-              </li>
-              <li>
-                ✅ Step 2: Payments Setup
-                <a href="/payments" className="ml-3 inline-block px-2 py-0.5 rounded bg-green-500/20 text-green-400 text-xs font-bold hover:bg-green-500/30 transition underline">
-                  Manage payments
-                </a>
-              </li>
-              <li>✅ Step 3: Terms & Docs Accepted</li>
-            </ul>
-          </div>
-          {profile.first_name === 'User' && (
-            <Link href="/settings">
-              <Button className="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold">
-                Complete Profile
-              </Button>
-            </Link>
-          )}
-        </div>
+        )}
 
         {/* Subscription Status */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 rounded-xl bg-paradiseGold/90 p-6 shadow-md">
@@ -391,13 +393,23 @@ export default function Dashboard() {
           <Link href="/favorites" className="inline-flex items-center gap-2 rounded bg-paradisePink px-5 py-2 font-semibold text-paradiseWhite hover:bg-paradiseGold hover:text-paradiseBlack transition">
             <Heart className="h-4 w-4" /> View Favorites
           </Link>
+          {profile?.role === 'creator' ? (
+            <Link href="/baddieupload" className="inline-flex items-center gap-2 rounded bg-paradisePink px-5 py-2 font-semibold text-paradiseWhite hover:bg-paradiseGold hover:text-paradiseBlack transition">
+              <Upload className="h-4 w-4" /> Upload Content
+            </Link>
+          ) : (
+            <Link href="/purchased-content" className="inline-flex items-center gap-2 rounded bg-paradisePink px-5 py-2 font-semibold text-paradiseWhite hover:bg-paradiseGold hover:text-paradiseBlack transition">
+              <Eye className="h-4 w-4" /> My Library
+            </Link>
+          )}
           <Link href="/settings" className="inline-flex items-center gap-2 rounded bg-paradiseBlack px-5 py-2 font-semibold text-paradiseWhite hover:bg-paradiseGold hover:text-paradiseBlack transition">
             <Settings className="h-4 w-4" /> Account Settings
           </Link>
         </div>
 
-        {/* Recent Purchases */}
-        <div className="rounded-2xl bg-[#141414] border border-paradiseGold/30 p-6 shadow-lg">
+        {/* Recent Purchases - Only for regular users */}
+        {profile?.role !== 'creator' && (
+          <div className="rounded-2xl bg-[#141414] border border-paradiseGold/30 p-6 shadow-lg">
           <h2 className="text-xl font-bold text-paradisePink mb-4">Recent Purchases</h2>
           <ul className="space-y-4">
             <li className="flex items-center gap-4">
@@ -438,6 +450,7 @@ export default function Dashboard() {
             </li>
           </ul>
         </div>
+        )}
 
         {/* Recent Activity */}
         <div className="rounded-2xl bg-[#141414] border border-paradiseGold/30 p-6 shadow-lg">
@@ -461,73 +474,152 @@ export default function Dashboard() {
           </ul>
         </div>
 
-        {/* My Content Card */}
-        <div className="rounded-2xl bg-[#141414] border border-paradiseGold/30 p-6 shadow-lg">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold text-paradisePink">My Content</h2>
-            <div className="flex gap-2">
-              <Link href="/mycontent" className="inline-flex items-center gap-1 rounded bg-paradiseGold px-3 py-1 text-sm font-semibold text-paradiseBlack hover:bg-paradisePink hover:text-paradiseWhite transition">
-                <Eye className="h-4 w-4" /> View All
-              </Link>
-              <Link href="/baddieupload" className="inline-flex items-center gap-1 rounded bg-paradisePink px-3 py-1 text-sm font-semibold text-paradiseWhite hover:bg-paradiseGold hover:text-paradiseBlack transition">
-              <Upload className="h-4 w-4" /> Upload New
-              </Link>
+        {/* Content Management Cards - Different for creators vs users */}
+        {profile?.role === 'creator' ? (
+          /* Creator Content Card */
+          <div className="rounded-2xl bg-[#141414] border border-paradiseGold/30 p-6 shadow-lg">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-paradisePink">My Content</h2>
+              <div className="flex gap-2">
+                <Link href="/mycontent" className="inline-flex items-center gap-1 rounded bg-paradiseGold px-3 py-1 text-sm font-semibold text-paradiseBlack hover:bg-paradisePink hover:text-paradiseWhite transition">
+                  <Eye className="h-4 w-4" /> View All
+                </Link>
+                <Link href="/baddieupload" className="inline-flex items-center gap-1 rounded bg-paradisePink px-3 py-1 text-sm font-semibold text-paradiseWhite hover:bg-paradiseGold hover:text-paradiseBlack transition">
+                  <Upload className="h-4 w-4" /> Upload New
+                </Link>
+              </div>
             </div>
-          </div>
-          <Link href="/mycontent" className="block">
-          <ul className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-              <li className="rounded-lg border-2 border-paradiseGold overflow-hidden bg-[#141414] shadow hover:border-paradisePink transition">
-              <div className="relative h-28 w-full">
-                <Image src="/mycontent1.jpg" alt="Content 1" fill className="object-cover" />
-              </div>
-              <div className="p-3">
-                <div className="font-semibold text-white">Urban Sunset</div>
-                <div className="text-xs text-gray-300">Uploaded 3 days ago</div>
-              </div>
-            </li>
-              <li className="rounded-lg border-2 border-paradiseGold overflow-hidden bg-[#141414] shadow hover:border-paradisePink transition">
-              <div className="relative h-28 w-full">
-                <Image src="/mycontent2.jpg" alt="Content 2" fill className="object-cover" />
-              </div>
-              <div className="p-3">
-                <div className="font-semibold text-white">Neon Dreams</div>
-                <div className="text-xs text-gray-300">Uploaded 1 week ago</div>
-              </div>
-            </li>
-              <li className="rounded-lg border-2 border-paradiseGold overflow-hidden bg-[#141414] shadow hover:border-paradisePink transition">
-              <div className="relative h-28 w-full">
-                <Image src="/mycontent3.jpg" alt="Content 3" fill className="object-cover" />
-              </div>
-              <div className="p-3">
-                <div className="font-semibold text-white">Abstract Flow</div>
-                <div className="text-xs text-gray-300">Uploaded 2 weeks ago</div>
-              </div>
-            </li>
-          </ul>
-          </Link>
-        </div>
-
-        {/* My Packages Card */}
-        <div className="rounded-2xl bg-[#141414] border border-paradiseGold/30 p-6 shadow-lg">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold text-paradisePink">My Packages</h2>
-            <div className="flex gap-2">
-              <Link href="/packages" className="inline-flex items-center gap-1 rounded bg-paradiseGold px-3 py-1 text-sm font-semibold text-paradiseBlack hover:bg-paradisePink hover:text-paradiseWhite transition">
-                <Eye className="h-4 w-4" /> View All
-              </Link>
-              <Link href="/edit-packages" className="inline-flex items-center gap-1 rounded bg-paradiseGold px-3 py-1 text-sm font-semibold text-paradiseBlack hover:bg-paradiseGold hover:text-paradiseBlack transition">
-                <Upload className="h-4 w-4" /> Manage Packages
-              </Link>
-            </div>
-          </div>
-          <div className="text-center py-8">
-            <div className="text-4xl mb-2">📦</div>
-            <p className="text-gray-300 mb-4">Create and manage your content packages</p>
-            <Link href="/edit-packages" className="inline-flex items-center gap-2 rounded bg-paradisePink px-4 py-2 font-semibold text-paradiseWhite hover:bg-paradiseGold hover:text-paradiseBlack transition">
-              <Upload className="h-4 w-4" /> Create Your First Package
+            <Link href="/mycontent" className="block">
+              <ul className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                <li className="rounded-lg border-2 border-paradiseGold overflow-hidden bg-[#141414] shadow hover:border-paradisePink transition">
+                  <div className="relative h-28 w-full">
+                    <Image src="/mycontent1.jpg" alt="Content 1" fill className="object-cover" />
+                  </div>
+                  <div className="p-3">
+                    <div className="font-semibold text-white">Urban Sunset</div>
+                    <div className="text-xs text-gray-300">Uploaded 3 days ago</div>
+                  </div>
+                </li>
+                <li className="rounded-lg border-2 border-paradiseGold overflow-hidden bg-[#141414] shadow hover:border-paradisePink transition">
+                  <div className="relative h-28 w-full">
+                    <Image src="/mycontent2.jpg" alt="Content 2" fill className="object-cover" />
+                  </div>
+                  <div className="p-3">
+                    <div className="font-semibold text-white">Neon Dreams</div>
+                    <div className="text-xs text-gray-300">Uploaded 1 week ago</div>
+                  </div>
+                </li>
+                <li className="rounded-lg border-2 border-paradiseGold overflow-hidden bg-[#141414] shadow hover:border-paradisePink transition">
+                  <div className="relative h-28 w-full">
+                    <Image src="/mycontent3.jpg" alt="Content 3" fill className="object-cover" />
+                  </div>
+                  <div className="p-3">
+                    <div className="font-semibold text-white">Abstract Flow</div>
+                    <div className="text-xs text-gray-300">Uploaded 2 weeks ago</div>
+                  </div>
+                </li>
+              </ul>
             </Link>
           </div>
-        </div>
+        ) : (
+          /* User Content Library Card */
+          <div className="rounded-2xl bg-[#141414] border border-paradiseGold/30 p-6 shadow-lg">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-paradisePink">My Content Library</h2>
+              <div className="flex gap-2">
+                <Link href="/purchased-content" className="inline-flex items-center gap-1 rounded bg-paradiseGold px-3 py-1 text-sm font-semibold text-paradiseBlack hover:bg-paradisePink hover:text-paradiseWhite transition">
+                  <Eye className="h-4 w-4" /> View Library
+                </Link>
+                <Link href="/browse" className="inline-flex items-center gap-1 rounded bg-paradisePink px-3 py-1 text-sm font-semibold text-paradiseWhite hover:bg-paradiseGold hover:text-paradiseBlack transition">
+                  <ShoppingCart className="h-4 w-4" /> Browse More
+                </Link>
+              </div>
+            </div>
+            <div className="text-center py-8">
+              <div className="text-4xl mb-4">📚</div>
+              <h3 className="text-lg font-semibold text-paradisePink mb-2">Your Digital Library</h3>
+              <p className="text-gray-300 mb-4">
+                Access all your purchased content and subscription benefits in one place
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                <div className="bg-[#1a1a1a] rounded-lg p-3 border border-paradiseGold/30">
+                  <div className="text-2xl mb-2">🛒</div>
+                  <div className="text-sm font-semibold text-paradiseGold">Purchased Content</div>
+                  <div className="text-xs text-gray-300">One-time purchases</div>
+                </div>
+                <div className="bg-[#1a1a1a] rounded-lg p-3 border border-paradisePink/30">
+                  <div className="text-2xl mb-2">⭐</div>
+                  <div className="text-sm font-semibold text-paradisePink">Subscriptions</div>
+                  <div className="text-xs text-gray-300">Ongoing access</div>
+                </div>
+              </div>
+              <Link href="/purchased-content" className="inline-flex items-center gap-2 rounded bg-paradisePink px-6 py-3 font-semibold text-paradiseWhite hover:bg-paradiseGold hover:text-paradiseBlack transition">
+                <Eye className="h-5 w-5" /> View My Library
+              </Link>
+            </div>
+          </div>
+        )}
+
+        {/* User Subscription Summary Card - Only for regular users */}
+        {profile?.role !== 'creator' && (
+          <div className="rounded-2xl bg-[#141414] border border-paradiseGold/30 p-6 shadow-lg">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-paradisePink">My Subscriptions</h2>
+              <div className="flex gap-2">
+                <Link href="/purchased-content" className="inline-flex items-center gap-1 rounded bg-paradiseGold px-3 py-1 text-sm font-semibold text-paradiseBlack hover:bg-paradisePink hover:text-paradiseWhite transition">
+                  <Eye className="h-4 w-4" /> View All
+                </Link>
+                <Link href="/creators" className="inline-flex items-center gap-1 rounded bg-paradisePink px-3 py-1 text-sm font-semibold text-paradiseWhite hover:bg-paradiseGold hover:text-paradiseBlack transition">
+                  <Star className="h-4 w-4" /> Discover Creators
+                </Link>
+              </div>
+            </div>
+            <div className="text-center py-6">
+              <div className="text-4xl mb-4">⭐</div>
+              <h3 className="text-lg font-semibold text-paradisePink mb-2">Support Your Favorite Creators</h3>
+              <p className="text-gray-300 mb-4">
+                Subscribe to creators to get exclusive content and support their work
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                <div className="bg-[#1a1a1a] rounded-lg p-3 border border-paradiseGold/30">
+                  <div className="text-lg font-semibold text-paradiseGold">0</div>
+                  <div className="text-xs text-gray-300">Active Subscriptions</div>
+                </div>
+                <div className="bg-[#1a1a1a] rounded-lg p-3 border border-paradisePink/30">
+                  <div className="text-lg font-semibold text-paradisePink">$0.00</div>
+                  <div className="text-xs text-gray-300">Monthly Spending</div>
+                </div>
+              </div>
+              <Link href="/creators" className="inline-flex items-center gap-2 rounded bg-paradisePink px-6 py-3 font-semibold text-paradiseWhite hover:bg-paradiseGold hover:text-paradiseBlack transition">
+                <Star className="h-5 w-5" /> Find Creators to Support
+              </Link>
+            </div>
+          </div>
+        )}
+
+        {/* My Packages Card - Only for creators */}
+        {profile?.role === 'creator' && (
+          <div className="rounded-2xl bg-[#141414] border border-paradiseGold/30 p-6 shadow-lg">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-paradisePink">My Packages</h2>
+              <div className="flex gap-2">
+                <Link href="/packages" className="inline-flex items-center gap-1 rounded bg-paradiseGold px-3 py-1 text-sm font-semibold text-paradiseBlack hover:bg-paradisePink hover:text-paradiseWhite transition">
+                  <Eye className="h-4 w-4" /> View All
+                </Link>
+                <Link href="/edit-packages" className="inline-flex items-center gap-1 rounded bg-paradiseGold px-3 py-1 text-sm font-semibold text-paradiseBlack hover:bg-paradiseGold hover:text-paradiseBlack transition">
+                  <Upload className="h-4 w-4" /> Manage Packages
+                </Link>
+              </div>
+            </div>
+            <div className="text-center py-8">
+              <div className="text-4xl mb-2">📦</div>
+              <p className="text-gray-300 mb-4">Create and manage your content packages</p>
+              <Link href="/edit-packages" className="inline-flex items-center gap-2 rounded bg-paradisePink px-4 py-2 font-semibold text-paradiseWhite hover:bg-paradiseGold hover:text-paradiseBlack transition">
+                <Upload className="h-4 w-4" /> Create Your First Package
+              </Link>
+            </div>
+          </div>
+        )}
 
         {/* Creator Subscription Management Card - Only show for creators */}
         {profile?.role === 'creator' && (
