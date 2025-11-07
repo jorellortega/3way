@@ -138,7 +138,10 @@ export function AvatarUpload({
   return (
     <div className={`flex flex-col items-center gap-4 ${className}`}>
       <div className="relative">
-        <div className={`${sizeClasses[size]} relative overflow-hidden rounded-full border-2 border-paradiseGold shadow-lg`}>
+        <div 
+          className={`${sizeClasses[size]} relative overflow-hidden rounded-full border-2 border-paradiseGold shadow-lg cursor-pointer`}
+          onClick={() => fileInputRef.current?.click()}
+        >
           {getAvatarUrl() ? (
             <Image
               src={getAvatarUrl()!}
@@ -153,7 +156,7 @@ export function AvatarUpload({
           )}
           
           {/* Upload overlay */}
-          <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 opacity-0 hover:opacity-100 transition-opacity">
+          <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 opacity-0 hover:opacity-100 transition-opacity pointer-events-none">
             <Camera className="h-6 w-6 text-white" />
           </div>
         </div>
@@ -168,19 +171,6 @@ export function AvatarUpload({
         >
           <Upload className="h-4 w-4" />
         </Button>
-
-        {/* Remove button */}
-        {getAvatarUrl() && (
-          <Button
-            size="sm"
-            variant="outline"
-            className="absolute -bottom-2 -left-2 h-8 w-8 rounded-full p-0 bg-red-500 text-white border-red-500 hover:bg-red-600"
-            onClick={handleRemove}
-            disabled={uploading}
-          >
-            <X className="h-4 w-4" />
-          </Button>
-        )}
       </div>
 
       {/* File input */}

@@ -73,24 +73,44 @@ export default function OnboardingPage() {
 
     setLoading(true);
     try {
-      // Save to the onboarding_progress table
-      const { error } = await supabase
+      // Check if record exists
+      const { data: existing } = await supabase
         .from('onboarding_progress')
-        .upsert({
-          user_id: user.id,
-          terms_accepted: true,
-          status: 'in_progress',
-          updated_at: new Date().toISOString()
-        });
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+
+      const updateData: any = {
+        terms_accepted: true,
+        terms_accepted_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+
+      let error;
+      if (existing) {
+        // Update existing record
+        const { error: updateError } = await supabase
+          .from('onboarding_progress')
+          .update(updateData)
+          .eq('user_id', user.id);
+        error = updateError;
+      } else {
+        // Create new record
+        const { error: insertError } = await supabase
+          .from('onboarding_progress')
+          .insert({
+            user_id: user.id,
+            ...updateData
+          });
+        error = insertError;
+      }
 
       if (error) {
         throw error;
       }
       
-      // Update step status in UI
-      setOnboardingSteps(prev => prev.map((step, index) => 
-        index === 0 ? { ...step, status: 'completed' } : step
-      ));
+      // Reload progress to update UI
+      await loadExistingProgress();
       setShowTermsDialog(false);
       
       // Show success message
@@ -130,7 +150,10 @@ export default function OnboardingPage() {
       
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('files')
-        .upload(filePath, file);
+        .upload(filePath, file, {
+          upsert: true, // Allow overwriting if file exists
+          cacheControl: '3600'
+        });
 
       if (uploadError) {
         console.error("Storage upload error:", uploadError);
@@ -155,27 +178,80 @@ export default function OnboardingPage() {
         }
       }
 
-      // Update existing onboarding progress record
-      const { error: dbError } = await supabase
+      // Check if record exists, then update or insert
+      const { data: existing, error: fetchError } = await supabase
         .from('onboarding_progress')
-        .update({
-          identity_document_url: filePath,
-          identity_status: 'submitted', // Document submitted, waiting for admin review
-          updated_at: new Date().toISOString()
-        })
-        .eq('user_id', user.id);
+        .select('*')
+        .eq('user_id', user.id)
+        .maybeSingle(); // Use maybeSingle instead of single to avoid error if no record exists
+
+      // Prepare update data - only include fields that exist in the actual schema
+      // Check what fields the existing record has to determine schema version
+      const updateData: any = {
+        identity_document_url: filePath,
+      };
+
+      // Check which schema we're using based on existing record
+      if (existing) {
+        // Check if new schema fields exist
+        if ('identity_status' in existing) {
+          // New schema - use new field names
+          updateData.identity_status = 'submitted';
+          updateData.identity_submitted_at = new Date().toISOString();
+          // Only add these if they exist in the schema
+          if ('identity_reviewed_at' in existing) {
+            updateData.identity_reviewed_at = null;
+          }
+          if ('identity_review_notes' in existing) {
+            updateData.identity_review_notes = null;
+          }
+        } else if ('status' in existing) {
+          // Old schema - use old field names
+          updateData.status = 'submitted';
+          if ('identity_verified' in existing) {
+            updateData.identity_verified = false; // Reset verification status
+          }
+        } else {
+          // Fallback - try new schema
+          updateData.identity_status = 'submitted';
+          updateData.identity_submitted_at = new Date().toISOString();
+        }
+      } else {
+        // No existing record - use new schema
+        updateData.identity_status = 'submitted';
+        updateData.identity_submitted_at = new Date().toISOString();
+      }
+
+      let dbError;
+      if (existing) {
+        // Update existing record
+        const { error: updateError } = await supabase
+          .from('onboarding_progress')
+          .update(updateData)
+          .eq('user_id', user.id);
+        dbError = updateError;
+      } else {
+        // Create new record
+        const { error: insertError } = await supabase
+          .from('onboarding_progress')
+          .insert({
+            user_id: user.id,
+            ...updateData
+          });
+        dbError = insertError;
+      }
 
       if (dbError) {
         console.error("Database error details:", dbError);
+        console.error("Update data:", updateData);
+        console.error("Existing record:", existing);
         throw dbError;
       }
       
-      // Update step status in UI to show "submitted"
-      setOnboardingSteps(prev => prev.map((step, index) => 
-        index === 1 ? { ...step, status: 'in-progress' } : step
-      ));
-      
+      // Reload progress to update UI
+      await loadExistingProgress();
       setUploadStatus("Document uploaded successfully! Status: Submitted for review. Admin will review within 24-48 hours.");
+      setFile(null);
       
     } catch (error) {
       console.error("Error uploading document:", error);
@@ -208,51 +284,54 @@ export default function OnboardingPage() {
   };
 
   // Load existing onboarding progress
-  useEffect(() => {
-    const loadExistingProgress = async () => {
-      if (!user?.id) return;
+  const loadExistingProgress = async () => {
+    if (!user?.id) return;
 
-      try {
-        const { data, error } = await supabase
-          .from('onboarding_progress')
-          .select('*')
-          .eq('user_id', user.id)
-          .single();
+    try {
+      const { data, error } = await supabase
+        .from('onboarding_progress')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
 
-        if (error && error.code !== 'PGRST116') {
-          console.error('Error loading progress:', error);
-          return;
-        }
-
-        if (data) {
-          setExistingProgress(data);
-          
-          // Update step statuses based on database
-          setOnboardingSteps(prev => prev.map((step, index) => {
-            if (index === 0 && data.terms_accepted) {
-              return { ...step, status: 'completed' };
-            }
-            if (index === 1) {
-              // Handle identity verification status
-              if (data.identity_status === 'approved') {
-                return { ...step, status: 'completed' };
-              } else if (data.identity_status === 'submitted' || data.identity_status === 'under_review') {
-                return { ...step, status: 'in-progress' };
-              } else if (data.identity_status === 'rejected' || data.identity_status === 'resubmit_required') {
-                return { ...step, status: 'pending' }; // Reset to pending if rejected
-              }
-            }
-            if (index === 2 && data.payments_setup) {
-              return { ...step, status: 'completed' };
-            }
-            return step;
-          }));
-        }
-      } catch (error) {
+      if (error && error.code !== 'PGRST116') {
         console.error('Error loading progress:', error);
+        return;
       }
-    };
 
+      if (data) {
+        setExistingProgress(data);
+        
+        // Update step statuses based on database
+        setOnboardingSteps(prev => prev.map((step, index) => {
+          if (index === 0 && data.terms_accepted) {
+            return { ...step, status: 'completed' };
+          }
+          if (index === 1) {
+            // Handle identity verification status
+            if (data.identity_status === 'approved') {
+              return { ...step, status: 'completed' };
+            } else if (data.identity_status === 'submitted' || data.identity_status === 'under_review') {
+              return { ...step, status: 'in-progress' };
+            } else if (data.identity_status === 'rejected' || data.identity_status === 'resubmit_required') {
+              return { ...step, status: 'pending' }; // Reset to pending if rejected
+            }
+          }
+          if (index === 2 && data.payments_setup) {
+            return { ...step, status: 'completed' };
+          }
+          return step;
+        }));
+      } else {
+        // Reset to pending if no data
+        setOnboardingSteps(prev => prev.map(step => ({ ...step, status: 'pending' })));
+      }
+    } catch (error) {
+      console.error('Error loading progress:', error);
+    }
+  };
+
+  useEffect(() => {
     loadExistingProgress();
   }, [user, supabase]);
 
@@ -303,23 +382,28 @@ export default function OnboardingPage() {
                   <p className="text-paradiseBlack/80 mb-4">{step.description}</p>
                   
                   {/* Step-specific content */}
-                  {step.id === 'identity' && step.status !== 'completed' && (
+                  {step.id === 'identity' && (
                     <div className="space-y-4">
                       {/* Show current status if document was submitted */}
                       {existingProgress?.identity_status && existingProgress.identity_status !== 'pending' && (
                         <div className={`p-4 rounded-lg border ${
                           existingProgress.identity_status === 'submitted' || existingProgress.identity_status === 'under_review' 
                             ? 'bg-blue-50 border-blue-200 text-blue-800' 
+                            : existingProgress.identity_status === 'approved'
+                            ? 'bg-green-50 border-green-200 text-green-800'
                             : 'bg-red-50 border-red-200 text-red-800'
                         }`}>
                           <div className="font-semibold mb-2">
                             Status: {existingProgress.identity_status.replace('_', ' ').toUpperCase()}
                           </div>
                           {existingProgress.identity_status === 'submitted' && (
-                            <p>Your document has been submitted and is waiting for admin review.</p>
+                            <p>Your document has been submitted and is waiting for admin review. You can upload a new document if needed.</p>
                           )}
                           {existingProgress.identity_status === 'under_review' && (
-                            <p>Your document is currently being reviewed by our team.</p>
+                            <p>Your document is currently being reviewed by our team. You can upload a new document if needed.</p>
+                          )}
+                          {existingProgress.identity_status === 'approved' && (
+                            <p>Your document has been approved. You can upload a new document if you need to update it.</p>
                           )}
                           {existingProgress.identity_status === 'rejected' && (
                             <p>Your document was rejected. Please upload a new document.</p>
@@ -330,39 +414,44 @@ export default function OnboardingPage() {
                         </div>
                       )}
 
-                      {/* Only show upload form if no document submitted or if rejected/resubmit required */}
-                      {(!existingProgress?.identity_status || 
-                        existingProgress.identity_status === 'pending' || 
-                        existingProgress.identity_status === 'rejected' || 
-                        existingProgress.identity_status === 'resubmit_required') && (
-                        <form onSubmit={handleDocumentUpload} className="space-y-4">
-                          <div className="border-2 border-dashed border-paradiseGold rounded-lg p-6 text-center">
-                            <Upload className="h-12 w-12 text-paradiseGold mx-auto mb-4" />
-                            <p className="text-paradiseBlack mb-2">Upload your government-issued ID or passport</p>
-                            <p className="text-sm text-paradiseBlack/60 mb-4">Accepted formats: JPG, PNG, PDF (Max 10MB)</p>
-                            <input
-                              type="file"
-                              accept="image/*,application/pdf"
-                              onChange={handleFileChange}
-                              className="block w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-paradisePink file:text-white hover:file:bg-paradiseGold"
-                            />
+                      {/* Always show upload form to allow resubmission */}
+                      <form onSubmit={handleDocumentUpload} className="space-y-4">
+                        <div className="border-2 border-dashed border-paradiseGold rounded-lg p-6 text-center">
+                          <Upload className="h-12 w-12 text-paradiseGold mx-auto mb-4" />
+                          <p className="text-paradiseBlack mb-2">
+                            {existingProgress?.identity_status === 'approved' 
+                              ? 'Upload a new document to update your identity verification'
+                              : 'Upload your government-issued ID or passport'}
+                          </p>
+                          <p className="text-sm text-paradiseBlack/60 mb-4">Accepted formats: JPG, PNG, PDF (Max 10MB)</p>
+                          <input
+                            type="file"
+                            accept="image/*,application/pdf"
+                            onChange={handleFileChange}
+                            className="block w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-paradisePink file:text-white hover:file:bg-paradiseGold"
+                          />
+                        </div>
+                        <button
+                          type="submit"
+                          disabled={!file || loading}
+                          className="w-full px-6 py-3 rounded bg-paradisePink text-white font-bold hover:bg-paradiseGold hover:text-paradiseBlack transition disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {loading 
+                            ? 'Uploading...' 
+                            : existingProgress?.identity_status === 'approved'
+                            ? 'Update Document'
+                            : existingProgress?.identity_status === 'submitted' || existingProgress?.identity_status === 'under_review'
+                            ? 'Resubmit Document'
+                            : 'Upload Document'}
+                        </button>
+                        {uploadStatus && (
+                          <div className={`text-center p-3 rounded-lg ${
+                            uploadStatus.includes('successfully') ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
+                          }`}>
+                            {uploadStatus}
                           </div>
-                          <button
-                            type="submit"
-                            disabled={!file || loading}
-                            className="w-full px-6 py-3 rounded bg-paradisePink text-white font-bold hover:bg-paradiseGold hover:text-paradiseBlack transition disabled:opacity-50 disabled:cursor-not-allowed"
-                          >
-                            {loading ? 'Uploading...' : 'Upload Document'}
-                          </button>
-                          {uploadStatus && (
-                            <div className={`text-center p-3 rounded-lg ${
-                              uploadStatus.includes('successfully') ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
-                            }`}>
-                              {uploadStatus}
-                            </div>
-                          )}
-                        </form>
-                      )}
+                        )}
+                      </form>
                     </div>
                   )}
 

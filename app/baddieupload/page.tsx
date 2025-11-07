@@ -1,9 +1,9 @@
 "use client"
 
-import { useState, ChangeEvent, FormEvent } from "react"
+import { useState, ChangeEvent, FormEvent, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Upload, Image as ImageIcon, Video, FileText, Music } from "lucide-react"
+import { Upload, Image as ImageIcon, Video, FileText, Music, AlertCircle, XCircle } from "lucide-react"
 import Image from "next/image"
 import { useAuth } from "@/hooks/useAuth"
 import { useRouter } from "next/navigation"
@@ -33,6 +33,50 @@ export default function BaddieUploadPage() {
   const [uploading, setUploading] = useState(false)
   const [agreedToTerms, setAgreedToTerms] = useState(false)
   const [isAiGenerated, setIsAiGenerated] = useState(false)
+  const [accountStatus, setAccountStatus] = useState<string | null>(null)
+  const [loadingStatus, setLoadingStatus] = useState(true)
+  const [userRole, setUserRole] = useState<string | null>(null)
+  const [checkingRole, setCheckingRole] = useState(true)
+
+  useEffect(() => {
+    const fetchUserRoleAndStatus = async () => {
+      if (!user) {
+        setLoadingStatus(false)
+        setCheckingRole(false)
+        return
+      }
+      try {
+        const { data, error } = await supabase
+          .from("users")
+          .select("role, account_status")
+          .eq("id", user.id)
+          .single()
+        
+        if (error) {
+          console.error("Error fetching user data:", error)
+          router.push("/dashboard")
+          return
+        }
+        
+        if (data) {
+          setUserRole(data.role || null)
+          setAccountStatus(data.account_status || 'good_standing')
+          
+          // Check if user has access (creator or admin)
+          if (data.role !== 'creator' && data.role !== 'admin') {
+            // User doesn't have access, will show access denied message
+          }
+        }
+      } catch (err) {
+        console.error("Error fetching user data:", err)
+        router.push("/dashboard")
+      } finally {
+        setLoadingStatus(false)
+        setCheckingRole(false)
+      }
+    }
+    fetchUserRoleAndStatus()
+  }, [user, supabase, router])
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0]
@@ -56,6 +100,21 @@ export default function BaddieUploadPage() {
     e.preventDefault()
     setError("")
     setSuccess(false)
+    
+    // Check account status first
+    if (accountStatus !== 'good_standing') {
+      if (accountStatus === 'paused') {
+        setError("Your account is currently paused. You cannot upload content at this time. Please contact support for more information.")
+      } else if (accountStatus === 'hold') {
+        setError("Your account is on hold. You cannot upload content at this time. Please contact support for more information.")
+      } else if (accountStatus === 'blocked') {
+        setError("Your account has been blocked. You cannot upload content. Please contact support for more information.")
+      } else {
+        setError("Your account is not in good standing. You cannot upload content at this time. Please contact support for more information.")
+      }
+      return
+    }
+    
     if (!agreedToTerms) {
       setError("You must agree to the terms of service to upload content.")
       return
@@ -155,6 +214,79 @@ export default function BaddieUploadPage() {
           </CardTitle>
         </CardHeader>
         <CardContent>
+          {checkingRole || loadingStatus ? (
+            <div className="text-center py-8 text-purple-200">Loading...</div>
+          ) : userRole !== 'creator' && userRole !== 'admin' ? (
+            <div className="space-y-4">
+              <div className="rounded-lg border border-red-500/50 bg-red-500/10 p-6">
+                <div className="flex items-start gap-3">
+                  <XCircle className="h-6 w-6 text-red-400 flex-shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    <h3 className="text-lg font-semibold text-red-400 mb-2">Access Denied</h3>
+                    <div className="space-y-2 text-purple-200">
+                      <p className="font-medium">You don't have permission to access this page.</p>
+                      <p className="text-sm">Only creators and admins can upload content to this platform.</p>
+                      <p className="text-sm">If you believe this is an error, please contact support.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="flex justify-center">
+                <Button
+                  onClick={() => router.push("/dashboard")}
+                  className="bg-paradisePink hover:bg-paradiseGold text-white font-semibold"
+                >
+                  Go to Dashboard
+                </Button>
+              </div>
+            </div>
+          ) : accountStatus !== 'good_standing' ? (
+            <div className="space-y-4">
+              <div className="rounded-lg border border-red-500/50 bg-red-500/10 p-6">
+                <div className="flex items-start gap-3">
+                  <XCircle className="h-6 w-6 text-red-400 flex-shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    <h3 className="text-lg font-semibold text-red-400 mb-2">Upload Restricted</h3>
+                    {accountStatus === 'paused' && (
+                      <div className="space-y-2 text-purple-200">
+                        <p className="font-medium">Your account is currently paused.</p>
+                        <p className="text-sm">You cannot upload new content while your account is paused. This may be due to a temporary restriction or account review.</p>
+                        <p className="text-sm">Please contact support if you have questions or need assistance with your account.</p>
+                      </div>
+                    )}
+                    {accountStatus === 'hold' && (
+                      <div className="space-y-2 text-purple-200">
+                        <p className="font-medium">Your account is on hold.</p>
+                        <p className="text-sm">You cannot upload new content while your account is on hold. This typically occurs during an account review or investigation.</p>
+                        <p className="text-sm">Please contact support for more information about your account status.</p>
+                      </div>
+                    )}
+                    {accountStatus === 'blocked' && (
+                      <div className="space-y-2 text-purple-200">
+                        <p className="font-medium">Your account has been blocked.</p>
+                        <p className="text-sm">You cannot upload new content because your account has been blocked. This is typically due to a violation of our terms of service.</p>
+                        <p className="text-sm">If you believe this is an error, please contact support to resolve this issue.</p>
+                      </div>
+                    )}
+                    {!accountStatus && (
+                      <div className="space-y-2 text-purple-200">
+                        <p className="font-medium">Account status unknown.</p>
+                        <p className="text-sm">Unable to verify your account status. Please contact support for assistance.</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+              <div className="rounded-lg border border-yellow-500/50 bg-yellow-500/10 p-4">
+                <div className="flex items-start gap-3">
+                  <AlertCircle className="h-5 w-5 text-yellow-400 flex-shrink-0 mt-0.5" />
+                  <p className="text-sm text-purple-200">
+                    If you need to update your account information or have questions about your account status, please visit your <a href="/settings" className="text-paradisePink hover:text-paradiseGold underline">settings page</a> or contact our support team.
+                  </p>
+                </div>
+              </div>
+            </div>
+          ) : (
           <form className="space-y-6" onSubmit={handleSubmit}>
             <div>
               <label className="block text-purple-200 mb-1 font-medium">Title</label>
@@ -286,6 +418,7 @@ export default function BaddieUploadPage() {
               <div className="text-green-400 text-center font-semibold mt-2">Content uploaded!</div>
             )}
           </form>
+          )}
         </CardContent>
       </Card>
     </div>

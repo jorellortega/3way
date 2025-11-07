@@ -100,7 +100,7 @@ export default function MyContentPage() {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-end mb-4">
-        <Button asChild variant="default">
+        <Button asChild className="bg-paradisePink hover:bg-paradiseGold text-white">
           <a href="/baddieupload">New Upload</a>
         </Button>
       </div>
@@ -110,18 +110,27 @@ export default function MyContentPage() {
           <Button
             variant={activeTab === "All" ? "default" : "outline"}
             onClick={() => setActiveTab("All")}
+            className={activeTab === "All" 
+              ? "bg-paradisePink hover:bg-paradiseGold text-white" 
+              : "bg-white border-paradiseGold text-paradiseBlack hover:bg-paradiseGold/10"}
           >
             All
           </Button>
           <Button
             variant={activeTab === "Favorites" ? "default" : "outline"}
             onClick={() => setActiveTab("Favorites")}
+            className={activeTab === "Favorites" 
+              ? "bg-paradisePink hover:bg-paradiseGold text-white" 
+              : "bg-white border-paradiseGold text-paradiseBlack hover:bg-paradiseGold/10"}
           >
             Favorites
           </Button>
           <Button
             variant={activeTab === "Categories" ? "default" : "outline"}
             onClick={() => setActiveTab("Categories")}
+            className={activeTab === "Categories" 
+              ? "bg-paradisePink hover:bg-paradiseGold text-white" 
+              : "bg-white border-paradiseGold text-paradiseBlack hover:bg-paradiseGold/10"}
           >
             Categories
           </Button>
@@ -132,6 +141,9 @@ export default function MyContentPage() {
                   key={cat}
                   variant={activeTab === cat ? "default" : "outline"}
                   onClick={() => setActiveTab(cat)}
+                  className={activeTab === cat 
+                    ? "bg-paradisePink hover:bg-paradiseGold text-white" 
+                    : "bg-white border-paradiseGold text-paradiseBlack hover:bg-paradiseGold/10"}
                 >
                   {cat}
                 </Button>
@@ -152,6 +164,9 @@ export default function MyContentPage() {
             size="icon"
             onClick={() => setViewMode("grid")}
             aria-label="Grid view"
+            className={viewMode === "grid" 
+              ? "bg-paradisePink hover:bg-paradiseGold text-white" 
+              : "bg-white border-paradiseGold text-paradiseBlack hover:bg-paradiseGold/10"}
           >
             <Grid className="h-5 w-5" />
           </Button>
@@ -160,6 +175,9 @@ export default function MyContentPage() {
             size="icon"
             onClick={() => setViewMode("list")}
             aria-label="List view"
+            className={viewMode === "list" 
+              ? "bg-paradisePink hover:bg-paradiseGold text-white" 
+              : "bg-white border-paradiseGold text-paradiseBlack hover:bg-paradiseGold/10"}
           >
             <List className="h-5 w-5" />
           </Button>
@@ -216,10 +234,20 @@ export default function MyContentPage() {
                 </div>
               </CardContent>
               <CardFooter className="flex justify-between mt-2">
-                <Button size="sm" variant="outline" onClick={() => handleEdit(item)}>
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  onClick={() => handleEdit(item)}
+                  className="bg-white border-paradiseGold text-paradiseBlack hover:bg-paradiseGold/10"
+                >
                   Edit
                 </Button>
-                <Button size="sm" variant="destructive" onClick={() => handleDelete(item)}>
+                <Button 
+                  size="sm" 
+                  variant="destructive" 
+                  onClick={() => handleDelete(item)}
+                  className="bg-red-600 hover:bg-red-700 text-white"
+                >
                   Delete
                 </Button>
               </CardFooter>

@@ -147,7 +147,7 @@ export default function ManageSubscriptionPage() {
     return (
       <div className="container px-4 py-8 md:px-6 md:py-12">
         <div className="mx-auto max-w-2xl text-center">
-          <div className="rounded-lg border border-paradiseGold bg-paradiseWhite p-8">
+          <div className="rounded-lg border border-paradiseGold bg-[#141414] p-8">
             <h1 className="text-2xl font-bold text-paradisePink mb-4">No Active Subscription</h1>
             <p className="text-paradiseGold mb-6">
               You don't have an active subscription. Subscribe to a plan to access premium features.
@@ -172,7 +172,7 @@ export default function ManageSubscriptionPage() {
 
         <div className="grid gap-8 md:grid-cols-2">
           {/* Current Subscription */}
-          <Card className="border-paradiseGold/30 shadow-[0_0_15px_rgba(249,200,70,0.15)]">
+          <Card className="bg-[#141414] border-paradiseGold/30 shadow-[0_0_15px_rgba(249,200,70,0.15)]">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-paradisePink">
                 {getPlanIcon(subscription.plan)}
@@ -253,7 +253,7 @@ export default function ManageSubscriptionPage() {
           </Card>
 
           {/* Billing History */}
-          <Card className="border-paradiseGold/30 shadow-[0_0_15px_rgba(249,200,70,0.15)]">
+          <Card className="bg-[#141414] border-paradiseGold/30 shadow-[0_0_15px_rgba(249,200,70,0.15)]">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-paradisePink">
                 <CreditCard className="h-5 w-5" />
@@ -303,7 +303,7 @@ export default function ManageSubscriptionPage() {
         </div>
 
         {/* Plan Comparison */}
-        <Card className="mt-8 border-paradiseGold/30 shadow-[0_0_15px_rgba(249,200,70,0.15)]">
+        <Card className="bg-[#141414] mt-8 border-paradiseGold/30 shadow-[0_0_15px_rgba(249,200,70,0.15)]">
           <CardHeader>
             <CardTitle className="text-paradisePink">Plan Comparison</CardTitle>
             <CardDescription className="text-paradiseGold">

@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import { User, Mail, Lock, Bell, Smartphone, Save } from "lucide-react";
+import { User, Mail, Lock, Bell, Smartphone, Save, UserCircle } from "lucide-react";
 import Image from "next/image";
 import { useState, useEffect } from "react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
@@ -13,6 +13,7 @@ export default function SettingsPage() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [supabase] = useState(() => createClientComponentClient<Database>());
   const { user } = useAuth();
 
@@ -22,7 +23,7 @@ export default function SettingsPage() {
       
       const { data, error } = await supabase
         .from("users")
-        .select("first_name, last_name, email, role, profile_image, bio")
+        .select("first_name, last_name, email, role, profile_image, bio, creator_name")
         .eq("id", user.id)
         .single();
 
@@ -42,6 +43,72 @@ export default function SettingsPage() {
 
   const handleAvatarUpdate = (newAvatarUrl: string | null) => {
     setProfile((prev: any) => ({ ...prev, profile_image: newAvatarUrl }));
+  };
+
+  const handleSave = async () => {
+    if (!user) return;
+    
+    setSaving(true);
+    try {
+      const firstNameInput = document.getElementById("firstName") as HTMLInputElement;
+      const lastNameInput = document.getElementById("lastName") as HTMLInputElement;
+      const bioInput = document.getElementById("bio") as HTMLTextAreaElement;
+      const creatorNameInput = document.getElementById("creatorName") as HTMLInputElement;
+      const emailInput = document.getElementById("email") as HTMLInputElement;
+      const passwordInput = document.getElementById("password") as HTMLInputElement;
+
+      // Update email if it has changed
+      if (emailInput?.value && emailInput.value.trim() !== "" && emailInput.value !== profile?.email) {
+        const { error: emailError } = await supabase.auth.updateUser({
+          email: emailInput.value,
+        });
+        if (emailError) {
+          alert("Error updating email: " + emailError.message);
+          setSaving(false);
+          return;
+        }
+      }
+
+      // Only update password if it's been entered
+      if (passwordInput?.value && passwordInput.value.trim() !== "") {
+        const { error: passwordError } = await supabase.auth.updateUser({
+          password: passwordInput.value,
+        });
+        if (passwordError) {
+          alert("Error updating password: " + passwordError.message);
+          setSaving(false);
+          return;
+        }
+      }
+
+      const updateData: any = {
+        first_name: firstNameInput?.value || "",
+        last_name: lastNameInput?.value || "",
+        email: emailInput?.value || profile?.email || "",
+        bio: bioInput?.value || null,
+        creator_name: creatorNameInput?.value || null,
+        updated_at: new Date().toISOString(),
+      };
+
+      const { error } = await supabase
+        .from("users")
+        .update(updateData)
+        .eq("id", user.id);
+
+      if (error) {
+        alert("Error updating profile: " + error.message);
+      } else {
+        setProfile((prev: any) => ({ ...prev, ...updateData }));
+        alert("Profile updated successfully!");
+        if (passwordInput?.value) {
+          passwordInput.value = "";
+        }
+      }
+    } catch (error: any) {
+      alert("Error: " + error.message);
+    } finally {
+      setSaving(false);
+    }
   };
 
   if (loading) {
@@ -91,7 +158,7 @@ export default function SettingsPage() {
                 id="firstName" 
                 type="text" 
                 defaultValue={profile?.first_name || ''} 
-                className="w-full rounded border-2 border-paradiseGold p-2 text-paradiseBlack focus:outline-none focus:border-paradisePink" 
+                className="w-full rounded border-2 border-paradiseGold p-2 text-white focus:outline-none focus:border-paradisePink" 
               />
             </div>
             <div>
@@ -102,9 +169,23 @@ export default function SettingsPage() {
                 id="lastName" 
                 type="text" 
                 defaultValue={profile?.last_name || ''} 
-                className="w-full rounded border-2 border-paradiseGold p-2 text-paradiseBlack focus:outline-none focus:border-paradisePink" 
+                className="w-full rounded border-2 border-paradiseGold p-2 text-white focus:outline-none focus:border-paradisePink" 
               />
             </div>
+          </div>
+          
+          <div>
+            <label className="block text-paradiseBlack font-semibold mb-1" htmlFor="creatorName">
+              <UserCircle className="inline h-4 w-4 mr-1" />Creator Name
+            </label>
+            <input 
+              id="creatorName" 
+              type="text" 
+              defaultValue={profile?.creator_name || ''} 
+              placeholder="Display name (optional)"
+              className="w-full rounded border-2 border-paradiseGold p-2 text-white focus:outline-none focus:border-paradisePink" 
+            />
+            <p className="text-xs text-gray-500 mt-1">This name will be displayed instead of your real name</p>
           </div>
           
           <div>
@@ -115,10 +196,8 @@ export default function SettingsPage() {
               id="email" 
               type="email" 
               defaultValue={profile?.email || ''} 
-              disabled
-              className="w-full rounded border-2 border-gray-300 p-2 text-gray-500 bg-gray-100" 
+              className="w-full rounded border-2 border-paradiseGold p-2 text-white focus:outline-none focus:border-paradisePink" 
             />
-            <p className="text-xs text-gray-500 mt-1">Email cannot be changed</p>
           </div>
           
           <div>
@@ -130,7 +209,7 @@ export default function SettingsPage() {
               rows={3}
               defaultValue={profile?.bio || ''} 
               placeholder="Tell us about yourself..."
-              className="w-full rounded border-2 border-paradiseGold p-2 text-paradiseBlack focus:outline-none focus:border-paradisePink" 
+              className="w-full rounded border-2 border-paradiseGold p-2 text-white focus:outline-none focus:border-paradisePink" 
             />
           </div>
           
@@ -142,7 +221,7 @@ export default function SettingsPage() {
               id="password" 
               type="password" 
               placeholder="••••••••" 
-              className="w-full rounded border-2 border-paradiseGold p-2 text-paradiseBlack focus:outline-none focus:border-paradisePink" 
+              className="w-full rounded border-2 border-paradiseGold p-2 text-white focus:outline-none focus:border-paradisePink" 
             />
           </div>
         </section>
@@ -151,23 +230,27 @@ export default function SettingsPage() {
         <section className="space-y-4">
           <h2 className="text-xl font-bold text-paradisePink">Notifications</h2>
           <div className="flex flex-col gap-3">
-            <label className="flex items-center gap-2">
+            <label className="flex items-center gap-2 text-paradiseBlack">
               <input type="checkbox" className="accent-paradisePink" defaultChecked />
               <Bell className="h-4 w-4 text-paradisePink" /> Email Notifications
             </label>
-            <label className="flex items-center gap-2">
+            <label className="flex items-center gap-2 text-paradiseBlack">
               <input type="checkbox" className="accent-paradiseGold" />
               <Smartphone className="h-4 w-4 text-paradiseGold" /> SMS Notifications
             </label>
-            <label className="flex items-center gap-2">
+            <label className="flex items-center gap-2 text-paradiseBlack">
               <input type="checkbox" className="accent-paradiseBlack" />
               <Bell className="h-4 w-4 text-paradiseBlack" /> Push Notifications
             </label>
           </div>
         </section>
         
-        <Button className="mt-6 w-full bg-paradisePink hover:bg-paradiseGold text-paradiseWhite">
-          <Save className="h-5 w-5 mr-2" /> Save Changes
+        <Button 
+          className="mt-6 w-full bg-paradisePink hover:bg-paradiseGold text-paradiseWhite"
+          onClick={handleSave}
+          disabled={saving}
+        >
+          <Save className="h-5 w-5 mr-2" /> {saving ? "Saving..." : "Save Changes"}
         </Button>
         
         <button

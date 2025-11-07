@@ -1,5 +1,8 @@
 'use client';
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useAuth } from "@/hooks/useAuth";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import type { Database } from "@/types/supabase";
 
 const mockTransactions = [
   { id: 1, date: "2024-06-01", type: "Payout", amount: 120.00, status: "Completed" },
@@ -9,7 +12,74 @@ const mockTransactions = [
 ];
 
 export default function PaymentsPage() {
+  const { user } = useAuth();
+  const [supabase] = useState(() => createClientComponentClient<Database>());
   const [showUpdate, setShowUpdate] = useState(false);
+  const [paymentsSetup, setPaymentsSetup] = useState(false);
+
+  useEffect(() => {
+    const checkPaymentsSetup = async () => {
+      if (!user?.id) return;
+
+      const { data } = await supabase
+        .from('onboarding_progress')
+        .select('payments_setup')
+        .eq('user_id', user.id)
+        .single();
+
+      if (data) {
+        setPaymentsSetup(data.payments_setup || false);
+      }
+    };
+
+    checkPaymentsSetup();
+  }, [user, supabase]);
+
+  const handleCompleteSetup = async () => {
+    if (!user?.id) {
+      alert("User not authenticated. Please sign in again.");
+      return;
+    }
+
+    try {
+      // Check if record exists
+      const { data: existing } = await supabase
+        .from('onboarding_progress')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+
+      const updateData: any = {
+        payments_setup: true,
+        payments_setup_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+
+      if (existing) {
+        // Update existing record
+        const { error } = await supabase
+          .from('onboarding_progress')
+          .update(updateData)
+          .eq('user_id', user.id);
+        if (error) throw error;
+      } else {
+        // Create new record
+        const { error } = await supabase
+          .from('onboarding_progress')
+          .insert({
+            user_id: user.id,
+            ...updateData
+          });
+        if (error) throw error;
+      }
+
+      setPaymentsSetup(true);
+      alert("Payments setup completed successfully!");
+    } catch (error) {
+      console.error("Error updating payments setup:", error);
+      alert("Failed to update payments setup. Please try again.");
+    }
+  };
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-paradisePink via-paradiseGold to-paradiseWhite p-4">
@@ -46,6 +116,14 @@ export default function PaymentsPage() {
           </div>
         </div>
         <div className="flex flex-col items-center">
+          {!paymentsSetup && (
+            <button
+              className="px-6 py-2 rounded bg-green-600 text-white font-bold hover:bg-green-700 transition mb-4"
+              onClick={handleCompleteSetup}
+            >
+              Mark Payments as Setup Complete
+            </button>
+          )}
           <button
             className="px-6 py-2 rounded bg-paradisePink text-white font-bold hover:bg-paradiseGold hover:text-paradiseBlack transition mb-2"
             onClick={() => setShowUpdate(!showUpdate)}

@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { User, Download, ShoppingCart, Heart, Star, Edit, CreditCard, Settings, ArrowRight, Upload, Eye, ShieldCheck, ShieldAlert } from "lucide-react";
+import { User, Download, ShoppingCart, Heart, Star, Edit, CreditCard, Settings, ArrowRight, Upload, Eye, ShieldCheck, ShieldAlert, UserCircle, TrendingUp, DollarSign, Users, ChevronDown, ChevronUp } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
@@ -8,35 +8,189 @@ import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { useRouter } from "next/navigation";
 import type { Database } from "@/types/supabase";
 import { Button } from "@/components/ui/button";
+import { AvatarUpload } from "@/components/ui/avatar-upload";
 
 export default function Dashboard() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const [supabase] = useState(() => createClientComponentClient<Database>());
-  const [profile, setProfile] = useState<{ first_name: string; last_name: string; email: string; role: string; profile_image?: string | null } | null>(null);
+  const [profile, setProfile] = useState<{ first_name: string; last_name: string; email: string; role: string; profile_image?: string | null; creator_name?: string | null; account_status?: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [editOpen, setEditOpen] = useState(false);
   const [editFirstName, setEditFirstName] = useState("");
   const [editLastName, setEditLastName] = useState("");
+  const [editCreatorName, setEditCreatorName] = useState("");
   const [editLoading, setEditLoading] = useState(false);
   const [editError, setEditError] = useState("");
   const [editSuccess, setEditSuccess] = useState("");
   const [subscriptionTiers, setSubscriptionTiers] = useState<any[]>([]);
   const [tiersLoading, setTiersLoading] = useState(false);
+  const [onboardingProgress, setOnboardingProgress] = useState<any>(null);
+  const [analyticsExpanded, setAnalyticsExpanded] = useState(false);
+  const [uploadedContent, setUploadedContent] = useState<any[]>([]);
+  const [contentLoading, setContentLoading] = useState(false);
+  const [analytics, setAnalytics] = useState<{
+    totalSales: number;
+    totalSalesRevenue: number;
+    activeSubscriptions: number;
+    subscriptionRevenue: number;
+    totalRevenue: number;
+    loading: boolean;
+  }>({
+    totalSales: 0,
+    totalSalesRevenue: 0,
+    activeSubscriptions: 0,
+    subscriptionRevenue: 0,
+    totalRevenue: 0,
+    loading: true
+  });
 
   useEffect(() => {
     if (profile) {
       setEditFirstName(profile.first_name);
       setEditLastName(profile.last_name);
+      setEditCreatorName(profile.creator_name || "");
     }
   }, [profile]);
 
-  // Fetch subscription tiers when profile is loaded and user is a creator
+  // Fetch subscription tiers when profile is loaded and user is a creator or admin
   useEffect(() => {
-    if (profile?.role === 'creator' && user) {
+    if ((profile?.role === 'creator' || profile?.role === 'admin') && user) {
       fetchSubscriptionTiers();
+      fetchOnboardingProgress();
+      fetchAnalytics();
+      fetchUploadedContent();
     }
   }, [profile, user]);
+
+  // Fetch uploaded content for creators/admins
+  const fetchUploadedContent = async () => {
+    if (!user) return;
+    
+    setContentLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("content")
+        .select("id, title, price, type, thumbnail_url, status, created_at")
+        .eq("creator_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(6);
+
+      if (error) {
+        console.error("Error fetching uploaded content:", error);
+      } else {
+        setUploadedContent(data || []);
+      }
+    } catch (error) {
+      console.error("Error fetching uploaded content:", error);
+    } finally {
+      setContentLoading(false);
+    }
+  };
+
+  // Fetch analytics data for creators/admins
+  const fetchAnalytics = async () => {
+    if (!user) return;
+    
+    setAnalytics(prev => ({ ...prev, loading: true }));
+    
+    try {
+      // First, get all content IDs for this creator
+      const { data: creatorContent, error: contentError } = await supabase
+        .from("content")
+        .select("id, price")
+        .eq("creator_id", user.id);
+
+      if (contentError) {
+        console.error("Error fetching creator content:", contentError);
+      }
+
+      const contentIds = (creatorContent || []).map(c => c.id);
+      
+      // Fetch sales data (content purchases) for this creator's content
+      let salesData: any[] = [];
+      if (contentIds.length > 0) {
+        const { data: accessData, error: salesError } = await supabase
+          .from("user_content_access")
+          .select(`
+            content_id,
+            created_at,
+            content:content_id (
+              price
+            )
+          `)
+          .in("content_id", contentIds);
+
+        if (salesError) {
+          console.error("Error fetching sales data:", salesError);
+        } else {
+          salesData = accessData || [];
+        }
+      }
+
+      // Fetch active subscriptions
+      const { data: subscriptionsData, error: subscriptionsError } = await supabase
+        .from("subscriptions")
+        .select("id, amount, status")
+        .eq("creator_id", user.id)
+        .eq("status", "active");
+
+      if (subscriptionsError) {
+        console.error("Error fetching subscriptions:", subscriptionsError);
+      }
+
+      // Calculate sales metrics
+      const totalSales = salesData.length;
+      const totalSalesRevenue = salesData.reduce((sum, sale) => {
+        const price = typeof sale.content === 'object' && sale.content ? parseFloat(sale.content.price || 0) : 0;
+        return sum + price;
+      }, 0);
+
+      // Calculate subscription metrics
+      const subscriptions = subscriptionsData || [];
+      const activeSubscriptions = subscriptions.length;
+      const subscriptionRevenue = subscriptions.reduce((sum, sub) => {
+        return sum + parseFloat(sub.amount || 0);
+      }, 0);
+
+      // Calculate total revenue (monthly for subscriptions)
+      const totalRevenue = totalSalesRevenue + subscriptionRevenue;
+
+      setAnalytics({
+        totalSales,
+        totalSalesRevenue,
+        activeSubscriptions,
+        subscriptionRevenue,
+        totalRevenue,
+        loading: false
+      });
+    } catch (error) {
+      console.error("Error fetching analytics:", error);
+      setAnalytics(prev => ({ ...prev, loading: false }));
+    }
+  };
+
+  // Fetch onboarding progress for creators
+  const fetchOnboardingProgress = async () => {
+    if (!user) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from("onboarding_progress")
+        .select("*")
+        .eq("user_id", user.id)
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        console.error("Error fetching onboarding progress:", error);
+        return;
+      }
+
+      setOnboardingProgress(data || null);
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  };
 
   const fetchSubscriptionTiers = async () => {
     try {
@@ -61,6 +215,10 @@ export default function Dashboard() {
     }
   };
 
+  const handleAvatarUpdate = (newAvatarUrl: string | null) => {
+    setProfile((prev: any) => prev ? { ...prev, profile_image: newAvatarUrl } : null);
+  };
+
   useEffect(() => {
     const fetchProfile = async () => {
       // Wait for the auth hook to finish loading
@@ -83,7 +241,7 @@ export default function Dashboard() {
         console.log('Dashboard - Attempting to fetch profile for user:', user.id);
               const { data, error } = await supabase
           .from("users")
-          .select("first_name, last_name, email, role, profile_image")
+          .select("first_name, last_name, email, role, profile_image, creator_name, account_status")
           .eq("id", user.id)
           .single();
       
@@ -120,9 +278,9 @@ export default function Dashboard() {
             // Fetch the newly created profile
             const { data: newData, error: newError } = await supabase
               .from("users")
-              .select("first_name, last_name, email, role")
-              .eq("id", user.id)
-              .single();
+            .select("first_name, last_name, email, role, creator_name")
+            .eq("id", user.id)
+            .single();
             
             if (newError) {
               console.error('Error fetching newly created profile:', newError);
@@ -194,24 +352,17 @@ export default function Dashboard() {
       <div className="w-full max-w-4xl space-y-8">
         {/* User Profile Card */}
         <div className="flex flex-col sm:flex-row items-center gap-6 rounded-2xl bg-[#141414] border border-paradiseGold/30 p-6 shadow-xl">
-          <div className="relative h-20 w-20 overflow-hidden rounded-full border-4 border-paradiseGold">
-            {profile?.profile_image ? (
-              <Image 
-                src={supabase.storage.from('files').getPublicUrl(profile.profile_image).data.publicUrl} 
-                alt="User avatar" 
-                fill 
-                className="object-cover" 
-              />
-            ) : (
-              <Image src="/avatar-placeholder.png" alt="User avatar" fill className="object-cover" />
-            )}
+          <div className="cursor-pointer">
+            <AvatarUpload
+              currentAvatarUrl={profile?.profile_image}
+              userId={user.id}
+              onAvatarUpdate={handleAvatarUpdate}
+              size="md"
+            />
           </div>
           <div className="flex-1 text-center sm:text-left">
             <div className="text-2xl font-bold text-paradisePink">
-              {loading ? "Loading..." : profile ? `${profile.first_name} ${profile.last_name}` : ""}
-            </div>
-            <div className="text-white">
-              {loading ? "" : profile ? profile.email : ""}
+              {loading ? "Loading..." : profile ? (profile.creator_name || `${profile.first_name} ${profile.last_name}`) : ""}
             </div>
             <div className="text-sm text-paradiseGold mt-1">
               Role: {profile.role || 'user'}
@@ -249,14 +400,23 @@ export default function Dashboard() {
                   setEditSuccess("");
                   const { error } = await supabase
                     .from("users")
-                    .update({ first_name: editFirstName, last_name: editLastName })
+                    .update({ 
+                      first_name: editFirstName, 
+                      last_name: editLastName,
+                      creator_name: editCreatorName || null
+                    })
                     .eq("id", user.id);
                   setEditLoading(false);
                   if (error) {
                     setEditError("Failed to update profile. Please try again.");
                   } else {
                     setEditSuccess("Profile updated successfully!");
-                    setProfile((prev) => prev ? { ...prev, first_name: editFirstName, last_name: editLastName } : prev);
+                    setProfile((prev) => prev ? { 
+                      ...prev, 
+                      first_name: editFirstName, 
+                      last_name: editLastName,
+                      creator_name: editCreatorName || null
+                    } : prev);
                     setTimeout(() => setEditOpen(false), 1000);
                   }
                 }}
@@ -282,6 +442,20 @@ export default function Dashboard() {
                     className="w-full rounded border-2 border-paradiseGold p-2 text-white bg-paradiseBlack focus:outline-none focus:border-paradisePink"
                   />
                 </div>
+                <div>
+                  <label className="block text-paradiseBlack font-semibold mb-1" htmlFor="editCreatorName">
+                    <UserCircle className="inline h-4 w-4 mr-1" />Creator Name
+                  </label>
+                  <input
+                    id="editCreatorName"
+                    type="text"
+                    value={editCreatorName}
+                    onChange={e => setEditCreatorName(e.target.value)}
+                    placeholder="Display name (optional)"
+                    className="w-full rounded border-2 border-paradiseGold p-2 text-white bg-paradiseBlack focus:outline-none focus:border-paradisePink"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">This name will be displayed instead of your real name</p>
+                </div>
                 {editError && <div className="text-red-600 text-sm">{editError}</div>}
                 {editSuccess && <div className="text-green-600 text-sm">{editSuccess}</div>}
                 <div className="flex gap-4 justify-center mt-4">
@@ -306,49 +480,138 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Account Status - Only for creators */}
-        {profile?.role === 'creator' && (
+        {/* Account Status - Only for creators and admins */}
+        {(profile?.role === 'creator' || profile?.role === 'admin') && (
           <div className="rounded-xl bg-[#141414] border border-paradiseGold/30 p-6 shadow-md flex flex-col gap-2">
             <div className="flex items-center gap-4">
-              {profile.first_name !== 'User' ? (
+              {onboardingProgress?.identity_status === 'approved' && 
+               onboardingProgress?.payments_setup && 
+               onboardingProgress?.terms_accepted &&
+               profile?.account_status === 'good_standing' ? (
                 <ShieldCheck className="h-8 w-8 text-green-400" />
               ) : (
                 <ShieldAlert className="h-8 w-8 text-yellow-400" />
               )}
               <div>
-                <h3 className={`font-bold ${profile.first_name !== 'User' ? 'text-green-400' : 'text-yellow-400'}`}>
-                  Account Status: {profile.first_name !== 'User' ? 'Verified' : 'Not Verified'}
+                <h3 className={`font-bold ${
+                  onboardingProgress?.identity_status === 'approved' && 
+                  onboardingProgress?.payments_setup && 
+                  onboardingProgress?.terms_accepted &&
+                  profile?.account_status === 'good_standing' 
+                    ? 'text-green-400' 
+                    : 'text-yellow-400'
+                }`}>
+                  Account Status: {
+                    profile?.account_status === 'blocked' ? 'Blocked' :
+                    profile?.account_status === 'paused' ? 'Paused' :
+                    profile?.account_status === 'hold' ? 'On Hold' :
+                    onboardingProgress?.identity_status === 'approved' && 
+                    onboardingProgress?.payments_setup && 
+                    onboardingProgress?.terms_accepted
+                      ? 'Verified' 
+                      : 'Not Verified'
+                  }
                 </h3>
-                <p className={`text-sm ${profile.first_name !== 'User' ? 'text-green-300' : 'text-yellow-300'}`}>
-                  {profile.first_name !== 'User'
+                <p className={`text-sm ${
+                  onboardingProgress?.identity_status === 'approved' && 
+                  onboardingProgress?.payments_setup && 
+                  onboardingProgress?.terms_accepted &&
+                  profile?.account_status === 'good_standing'
+                    ? 'text-green-300' 
+                    : 'text-yellow-300'
+                }`}>
+                  {onboardingProgress?.identity_status === 'approved' && 
+                   onboardingProgress?.payments_setup && 
+                   onboardingProgress?.terms_accepted &&
+                   profile?.account_status === 'good_standing'
                     ? 'Your account is verified and in good standing.'
-                    : 'Please complete your profile to become a verified user.'}
+                    : 'Please complete all onboarding steps to become a verified creator.'}
                 </p>
               </div>
             </div>
-            {/* Onboarding Steps (mock data, all complete) */}
+            {/* Onboarding Steps */}
             <div className="mt-4">
-              <div className="font-semibold text-green-400 mb-2">Onboarding Steps:</div>
-              <ul className="space-y-1 text-white font-semibold">
-                <li>
-                  ✅ Step 1: Identity & Age Verified
-                  <a href="/onboarding" className="ml-3 inline-block px-2 py-0.5 rounded bg-green-500/20 text-green-400 text-xs font-bold hover:bg-green-500/30 transition underline">
-                    Documents submitted
-                  </a>
+              <div className="font-semibold text-paradiseGold mb-2">Onboarding Steps:</div>
+              <ul className="space-y-2 text-white font-semibold">
+                <li className="flex items-center gap-2">
+                  {onboardingProgress?.terms_accepted ? (
+                    <span className="text-green-400">✅</span>
+                  ) : (
+                    <span className="text-gray-400">⭕</span>
+                  )}
+                  <Link href="/onboarding" className="flex items-center gap-2 hover:text-paradisePink transition cursor-pointer">
+                    <span>Step 1: Terms & Docs Accepted</span>
+                    {onboardingProgress?.terms_accepted && (
+                      <span className="ml-2 inline-block px-2 py-0.5 rounded bg-green-500/20 text-green-400 text-xs font-bold">
+                        Completed
+                      </span>
+                    )}
+                    {!onboardingProgress?.terms_accepted && (
+                      <span className="ml-2 text-xs text-paradisePink hover:underline">
+                        Accept terms
+                      </span>
+                    )}
+                  </Link>
                 </li>
-                <li>
-                  ✅ Step 2: Payments Setup
-                  <a href="/payments" className="ml-3 inline-block px-2 py-0.5 rounded bg-green-500/20 text-green-400 text-xs font-bold hover:bg-green-500/30 transition underline">
-                    Manage payments
-                  </a>
+                <li className="flex items-center gap-2">
+                  {onboardingProgress?.identity_status === 'approved' ? (
+                    <span className="text-green-400">✅</span>
+                  ) : onboardingProgress?.identity_status === 'submitted' || onboardingProgress?.identity_status === 'under_review' ? (
+                    <span className="text-yellow-400">⏳</span>
+                  ) : onboardingProgress?.identity_status === 'rejected' || onboardingProgress?.identity_status === 'resubmit_required' ? (
+                    <span className="text-red-400">❌</span>
+                  ) : (
+                    <span className="text-gray-400">⭕</span>
+                  )}
+                  <Link href="/onboarding" className="flex items-center gap-2 hover:text-paradisePink transition cursor-pointer">
+                    <span>Step 2: Identity & Age Verified</span>
+                    {onboardingProgress?.identity_status === 'submitted' || onboardingProgress?.identity_status === 'under_review' ? (
+                      <span className="ml-2 inline-block px-2 py-0.5 rounded bg-yellow-500/20 text-yellow-400 text-xs font-bold">
+                        Under Review
+                      </span>
+                    ) : onboardingProgress?.identity_status === 'rejected' || onboardingProgress?.identity_status === 'resubmit_required' ? (
+                      <span className="ml-2 text-xs text-red-400 hover:underline">
+                        Resubmit required
+                      </span>
+                    ) : onboardingProgress?.identity_status === 'approved' ? (
+                      <span className="ml-2 inline-block px-2 py-0.5 rounded bg-green-500/20 text-green-400 text-xs font-bold">
+                        Verified
+                      </span>
+                    ) : (
+                      <span className="ml-2 text-xs text-paradisePink hover:underline">
+                        Upload documents
+                      </span>
+                    )}
+                  </Link>
                 </li>
-                <li>✅ Step 3: Terms & Docs Accepted</li>
+                <li className="flex items-center gap-2">
+                  {onboardingProgress?.payments_setup ? (
+                    <span className="text-green-400">✅</span>
+                  ) : (
+                    <span className="text-gray-400">⭕</span>
+                  )}
+                  <Link href="/payments" className="flex items-center gap-2 hover:text-paradisePink transition cursor-pointer">
+                    <span>Step 3: Payments Setup</span>
+                    {onboardingProgress?.payments_setup && (
+                      <span className="ml-2 inline-block px-2 py-0.5 rounded bg-green-500/20 text-green-400 text-xs font-bold">
+                        Completed
+                      </span>
+                    )}
+                    {!onboardingProgress?.payments_setup && (
+                      <span className="ml-2 text-xs text-paradisePink hover:underline">
+                        Setup payments
+                      </span>
+                    )}
+                  </Link>
+                </li>
               </ul>
             </div>
-            {profile.first_name === 'User' && (
-              <Link href="/settings">
-                <Button className="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold">
-                  Complete Profile
+            {(onboardingProgress?.identity_status !== 'approved' || 
+              !onboardingProgress?.payments_setup || 
+              !onboardingProgress?.terms_accepted) && (
+              <Link href="/onboarding">
+                <Button className="mt-4 bg-yellow-500 hover:bg-yellow-600 text-white font-semibold">
+                  Complete Onboarding
                 </Button>
               </Link>
             )}
@@ -474,12 +737,11 @@ export default function Dashboard() {
           </ul>
         </div>
 
-        {/* Content Management Cards - Different for creators vs users */}
-        {profile?.role === 'creator' ? (
-          /* Creator Content Card */
+        {/* My Uploaded Content - Only for creators and admins */}
+        {(profile?.role === 'creator' || profile?.role === 'admin') && (
           <div className="rounded-2xl bg-[#141414] border border-paradiseGold/30 p-6 shadow-lg">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-paradisePink">My Content</h2>
+              <h2 className="text-xl font-bold text-paradisePink">My Uploaded Content</h2>
               <div className="flex gap-2">
                 <Link href="/mycontent" className="inline-flex items-center gap-1 rounded bg-paradiseGold px-3 py-1 text-sm font-semibold text-paradiseBlack hover:bg-paradisePink hover:text-paradiseWhite transition">
                   <Eye className="h-4 w-4" /> View All
@@ -489,76 +751,91 @@ export default function Dashboard() {
                 </Link>
               </div>
             </div>
-            <Link href="/mycontent" className="block">
+            {contentLoading ? (
+              <div className="text-center py-8">
+                <div className="text-paradiseGold">Loading content...</div>
+              </div>
+            ) : uploadedContent.length > 0 ? (
               <ul className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                <li className="rounded-lg border-2 border-paradiseGold overflow-hidden bg-[#141414] shadow hover:border-paradisePink transition">
-                  <div className="relative h-28 w-full">
-                    <Image src="/mycontent1.jpg" alt="Content 1" fill className="object-cover" />
-                  </div>
-                  <div className="p-3">
-                    <div className="font-semibold text-white">Urban Sunset</div>
-                    <div className="text-xs text-gray-300">Uploaded 3 days ago</div>
-                  </div>
-                </li>
-                <li className="rounded-lg border-2 border-paradiseGold overflow-hidden bg-[#141414] shadow hover:border-paradisePink transition">
-                  <div className="relative h-28 w-full">
-                    <Image src="/mycontent2.jpg" alt="Content 2" fill className="object-cover" />
-                  </div>
-                  <div className="p-3">
-                    <div className="font-semibold text-white">Neon Dreams</div>
-                    <div className="text-xs text-gray-300">Uploaded 1 week ago</div>
-                  </div>
-                </li>
-                <li className="rounded-lg border-2 border-paradiseGold overflow-hidden bg-[#141414] shadow hover:border-paradisePink transition">
-                  <div className="relative h-28 w-full">
-                    <Image src="/mycontent3.jpg" alt="Content 3" fill className="object-cover" />
-                  </div>
-                  <div className="p-3">
-                    <div className="font-semibold text-white">Abstract Flow</div>
-                    <div className="text-xs text-gray-300">Uploaded 2 weeks ago</div>
-                  </div>
-                </li>
+                {uploadedContent.map((item) => (
+                  <Link key={item.id} href={`/mycontent/edit/${item.id}`} className="block">
+                    <li className="rounded-lg border-2 border-paradiseGold overflow-hidden bg-[#141414] shadow hover:border-paradisePink transition">
+                      <div className="relative h-28 w-full">
+                        {item.thumbnail_url ? (
+                          <Image 
+                            src={supabase.storage.from('files').getPublicUrl(item.thumbnail_url).data.publicUrl} 
+                            alt={item.title} 
+                            fill 
+                            className="object-cover" 
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-paradiseGold/10 text-paradiseGold">
+                            No Thumbnail
+                          </div>
+                        )}
+                      </div>
+                      <div className="p-3">
+                        <div className="font-semibold text-white truncate">{item.title}</div>
+                        <div className="text-xs text-gray-300">
+                          {new Date(item.created_at).toLocaleDateString()}
+                        </div>
+                        <div className="text-xs text-paradiseGold mt-1">
+                          ${item.price?.toFixed(2)} • {item.type}
+                        </div>
+                      </div>
+                    </li>
+                  </Link>
+                ))}
               </ul>
-            </Link>
+            ) : (
+              <div className="text-center py-8">
+                <div className="text-4xl mb-4">📁</div>
+                <div className="text-paradisePink font-semibold mb-2">No Content Yet</div>
+                <div className="text-gray-300 mb-4">Start uploading your content to see it here</div>
+                <Link href="/baddieupload" className="inline-flex items-center gap-2 rounded bg-paradisePink px-4 py-2 font-semibold text-paradiseWhite hover:bg-paradiseGold hover:text-paradiseBlack transition">
+                  <Upload className="h-4 w-4" /> Upload Your First Content
+                </Link>
+              </div>
+            )}
           </div>
-        ) : (
-          /* User Content Library Card */
-          <div className="rounded-2xl bg-[#141414] border border-paradiseGold/30 p-6 shadow-lg">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-paradisePink">My Content Library</h2>
-              <div className="flex gap-2">
-                <Link href="/purchased-content" className="inline-flex items-center gap-1 rounded bg-paradiseGold px-3 py-1 text-sm font-semibold text-paradiseBlack hover:bg-paradisePink hover:text-paradiseWhite transition">
-                  <Eye className="h-4 w-4" /> View Library
-                </Link>
-                <Link href="/browse" className="inline-flex items-center gap-1 rounded bg-paradisePink px-3 py-1 text-sm font-semibold text-paradiseWhite hover:bg-paradiseGold hover:text-paradiseBlack transition">
-                  <ShoppingCart className="h-4 w-4" /> Browse More
-                </Link>
-              </div>
-            </div>
-            <div className="text-center py-8">
-              <div className="text-4xl mb-4">📚</div>
-              <h3 className="text-lg font-semibold text-paradisePink mb-2">Your Digital Library</h3>
-              <p className="text-gray-300 mb-4">
-                Access all your purchased content and subscription benefits in one place
-              </p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-                <div className="bg-[#1a1a1a] rounded-lg p-3 border border-paradiseGold/30">
-                  <div className="text-2xl mb-2">🛒</div>
-                  <div className="text-sm font-semibold text-paradiseGold">Purchased Content</div>
-                  <div className="text-xs text-gray-300">One-time purchases</div>
-                </div>
-                <div className="bg-[#1a1a1a] rounded-lg p-3 border border-paradisePink/30">
-                  <div className="text-2xl mb-2">⭐</div>
-                  <div className="text-sm font-semibold text-paradisePink">Subscriptions</div>
-                  <div className="text-xs text-gray-300">Ongoing access</div>
-                </div>
-              </div>
-              <Link href="/purchased-content" className="inline-flex items-center gap-2 rounded bg-paradisePink px-6 py-3 font-semibold text-paradiseWhite hover:bg-paradiseGold hover:text-paradiseBlack transition">
-                <Eye className="h-5 w-5" /> View My Library
+        )}
+
+        {/* My Purchased Content - For all users (creators can also purchase content) */}
+        <div className="rounded-2xl bg-[#141414] border border-paradiseGold/30 p-6 shadow-lg">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold text-paradisePink">My Purchased Content</h2>
+            <div className="flex gap-2">
+              <Link href="/purchased-content" className="inline-flex items-center gap-1 rounded bg-paradiseGold px-3 py-1 text-sm font-semibold text-paradiseBlack hover:bg-paradisePink hover:text-paradiseWhite transition">
+                <Eye className="h-4 w-4" /> View Library
+              </Link>
+              <Link href="/browse" className="inline-flex items-center gap-1 rounded bg-paradisePink px-3 py-1 text-sm font-semibold text-paradiseWhite hover:bg-paradiseGold hover:text-paradiseBlack transition">
+                <ShoppingCart className="h-4 w-4" /> Browse More
               </Link>
             </div>
           </div>
-        )}
+          <div className="text-center py-8">
+            <div className="text-4xl mb-4">📚</div>
+            <h3 className="text-lg font-semibold text-paradisePink mb-2">Your Digital Library</h3>
+            <p className="text-gray-300 mb-4">
+              Access all your purchased content and subscription benefits in one place
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+              <div className="bg-[#1a1a1a] rounded-lg p-3 border border-paradiseGold/30">
+                <div className="text-2xl mb-2">🛒</div>
+                <div className="text-sm font-semibold text-paradiseGold">Purchased Content</div>
+                <div className="text-xs text-gray-300">One-time purchases</div>
+              </div>
+              <div className="bg-[#1a1a1a] rounded-lg p-3 border border-paradisePink/30">
+                <div className="text-2xl mb-2">⭐</div>
+                <div className="text-sm font-semibold text-paradisePink">Subscriptions</div>
+                <div className="text-xs text-gray-300">Ongoing access</div>
+              </div>
+            </div>
+            <Link href="/purchased-content" className="inline-flex items-center gap-2 rounded bg-paradisePink px-6 py-3 font-semibold text-paradiseWhite hover:bg-paradiseGold hover:text-paradiseBlack transition">
+              <Eye className="h-5 w-5" /> View My Library
+            </Link>
+          </div>
+        </div>
 
         {/* User Subscription Summary Card - Only for regular users */}
         {profile?.role !== 'creator' && (
@@ -597,8 +874,8 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* My Packages Card - Only for creators */}
-        {profile?.role === 'creator' && (
+        {/* My Packages Card - Only for creators and admins */}
+        {(profile?.role === 'creator' || profile?.role === 'admin') && (
           <div className="rounded-2xl bg-[#141414] border border-paradiseGold/30 p-6 shadow-lg">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold text-paradisePink">My Packages</h2>
@@ -621,8 +898,129 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Creator Subscription Management Card - Only show for creators */}
-        {profile?.role === 'creator' && (
+        {/* Analytics Card - Only for creators and admins */}
+        {(profile?.role === 'creator' || profile?.role === 'admin') && (
+          <div className="rounded-2xl bg-[#141414] border border-paradiseGold/30 p-6 shadow-lg">
+            <div 
+              className="flex items-center justify-between mb-4 cursor-pointer"
+              onClick={() => setAnalyticsExpanded(!analyticsExpanded)}
+            >
+              <h2 className="text-xl font-bold text-paradisePink flex items-center gap-2">
+                <TrendingUp className="h-5 w-5" />
+                Analytics & Revenue
+              </h2>
+              <button
+                className="text-paradiseGold hover:text-paradisePink transition-colors"
+                aria-label={analyticsExpanded ? "Collapse" : "Expand"}
+              >
+                {analyticsExpanded ? (
+                  <ChevronUp className="h-5 w-5" />
+                ) : (
+                  <ChevronDown className="h-5 w-5" />
+                )}
+              </button>
+            </div>
+            
+            {analyticsExpanded && (
+              <>
+                {analytics.loading ? (
+                  <div className="text-center py-8">
+                    <div className="text-paradiseGold">Loading analytics...</div>
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    {/* Revenue Summary */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                      <div className="bg-[#1a1a1a] rounded-lg p-4 border border-paradiseGold/30">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm text-paradiseGold">Total Revenue</span>
+                          <DollarSign className="h-4 w-4 text-paradisePink" />
+                        </div>
+                        <div className="text-2xl font-bold text-paradisePink">
+                          ${analytics.totalRevenue.toFixed(2)}
+                        </div>
+                        <div className="text-xs text-gray-400 mt-1">
+                          Sales + Subscriptions
+                        </div>
+                      </div>
+                      
+                      <div className="bg-[#1a1a1a] rounded-lg p-4 border border-paradiseGold/30">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm text-paradiseGold">Sales Revenue</span>
+                          <ShoppingCart className="h-4 w-4 text-paradiseGold" />
+                        </div>
+                        <div className="text-2xl font-bold text-paradiseGold">
+                          ${analytics.totalSalesRevenue.toFixed(2)}
+                        </div>
+                        <div className="text-xs text-gray-400 mt-1">
+                          {analytics.totalSales} total sales
+                        </div>
+                      </div>
+                      
+                      <div className="bg-[#1a1a1a] rounded-lg p-4 border border-paradisePink/30">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm text-paradiseGold">Monthly Subscriptions</span>
+                          <Star className="h-4 w-4 text-paradisePink" />
+                        </div>
+                        <div className="text-2xl font-bold text-paradisePink">
+                          ${analytics.subscriptionRevenue.toFixed(2)}
+                        </div>
+                        <div className="text-xs text-gray-400 mt-1">
+                          {analytics.activeSubscriptions} active
+                        </div>
+                      </div>
+                      
+                      <div className="bg-[#1a1a1a] rounded-lg p-4 border border-paradiseGold/30">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm text-paradiseGold">Total Sales</span>
+                          <Download className="h-4 w-4 text-paradiseGold" />
+                        </div>
+                        <div className="text-2xl font-bold text-paradiseGold">
+                          {analytics.totalSales}
+                        </div>
+                        <div className="text-xs text-gray-400 mt-1">
+                          Content purchases
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Active Subscriptions */}
+                    <div className="bg-[#1a1a1a] rounded-lg p-4 border border-paradiseGold/30">
+                      <div className="flex items-center justify-between mb-3">
+                        <h3 className="font-semibold text-paradisePink flex items-center gap-2">
+                          <Users className="h-4 w-4" />
+                          Active Subscribers
+                        </h3>
+                        <span className="text-2xl font-bold text-paradiseGold">
+                          {analytics.activeSubscriptions}
+                        </span>
+                      </div>
+                      <p className="text-xs text-gray-400">
+                        Total active subscriptions to your content tiers
+                      </p>
+                    </div>
+
+                    {/* Projected Annual Revenue */}
+                    <div className="bg-[#1a1a1a] rounded-lg p-4 border border-paradisePink/30">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h3 className="font-semibold text-paradisePink mb-1">Projected Annual Revenue</h3>
+                          <p className="text-xs text-gray-400">Based on current subscriptions</p>
+                        </div>
+                        <div className="text-2xl font-bold text-paradisePink">
+                          ${(analytics.subscriptionRevenue * 12 + analytics.totalSalesRevenue).toFixed(2)}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        )}
+
+        {/* Creator Subscription Management Card - Only show for creators and admins */}
+        {(profile?.role === 'creator' || profile?.role === 'admin') && (
           <div className="rounded-2xl bg-[#141414] border border-paradiseGold/30 p-6 shadow-lg">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold text-paradisePink">Subscription Tiers</h2>

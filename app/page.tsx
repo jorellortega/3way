@@ -21,6 +21,7 @@ interface Content {
   users?: {
     first_name: string
     last_name: string
+    creator_name: string | null
   }
 }
 
@@ -28,6 +29,7 @@ interface Creator {
   id: string
   first_name: string
   last_name: string
+  creator_name: string | null
   profile_image: string | null
   bio: string | null
   role: string
@@ -64,7 +66,7 @@ export default function Home() {
     const fetchFeaturedContent = async () => {
       const { data } = await supabase
         .from("content")
-        .select("id, title, price, type, thumbnail_url, status, content_url, users(first_name, last_name)")
+        .select("id, title, price, type, thumbnail_url, status, content_url, users(first_name, last_name, creator_name)")
         .eq("status", "published")
         .order("created_at", { ascending: false })
         .limit(6)
@@ -77,7 +79,7 @@ export default function Home() {
       console.log('Fetching elite creators...');
       const { data, error } = await supabase
         .from("users")
-        .select("id, first_name, last_name, profile_image, bio, role, is_verified")
+        .select("id, first_name, last_name, creator_name, profile_image, bio, role, is_verified")
         .eq("role", "creator")
         .order("created_at", { ascending: false })
         .limit(6)
@@ -245,7 +247,7 @@ export default function Home() {
                     <h3 className="font-medium">{item.title}</h3>
                     {item.users && (
                       <p className="text-sm text-purple-300 truncate">
-                        By {`${item.users.first_name} ${item.users.last_name}`}
+                        By {item.users.creator_name || `${item.users.first_name} ${item.users.last_name}`}
                       </p>
                     )}
                     <p className="text-sm text-paradiseGold">${item.price?.toFixed(2)}</p>
@@ -312,7 +314,7 @@ export default function Home() {
                         src={supabase.storage.from('files').getPublicUrl(creator.profile_image).data.publicUrl}
                         width={128}
                         height={128}
-                        alt={`${creator.first_name} ${creator.last_name}`}
+                        alt={creator.creator_name || `${creator.first_name} ${creator.last_name}`}
                         className="h-full w-full object-cover transition-all duration-300 group-hover:scale-110"
                       />
                     ) : (
@@ -332,7 +334,7 @@ export default function Home() {
                     )}
                   </div>
                   <div className="text-center">
-                    <h3 className="font-medium text-paradisePink">{creator.first_name} {creator.last_name}</h3>
+                    <h3 className="font-medium text-paradisePink">{creator.creator_name || `${creator.first_name} ${creator.last_name}`}</h3>
                     <div className="mt-1 flex items-center justify-center">
                       <span className="ml-1 text-sm text-paradiseGold">Creator</span>
                     </div>
@@ -397,7 +399,7 @@ export default function Home() {
                           {creator.profile_image ? (
                             <Image
                               src={supabase.storage.from('files').getPublicUrl(creator.profile_image).data.publicUrl || ''}
-                              alt={`${creator.first_name} ${creator.last_name}`}
+                              alt={creator.creator_name || `${creator.first_name} ${creator.last_name}`}
                               width={64}
                               height={64}
                               className="w-full h-full object-cover"
@@ -405,7 +407,9 @@ export default function Home() {
                           ) : (
                             <div className="w-full h-full bg-paradiseGold/20 flex items-center justify-center">
                               <span className="text-lg text-paradiseGold font-bold">
-                                {creator.first_name[0]}{creator.last_name[0]}
+                                {creator.creator_name 
+                                  ? creator.creator_name[0].toUpperCase()
+                                  : `${creator.first_name[0]}${creator.last_name[0]}`}
                               </span>
                             </div>
                           )}
@@ -418,7 +422,7 @@ export default function Home() {
                       </div>
                       
                       <h3 className="text-lg font-bold text-paradisePink mb-1">
-                        {creator.first_name} {creator.last_name}
+                        {creator.creator_name || `${creator.first_name} ${creator.last_name}`}
                       </h3>
                       {creator.bio && (
                         <p className="text-sm text-paradiseGold mb-2 line-clamp-2">

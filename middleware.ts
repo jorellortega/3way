@@ -25,7 +25,8 @@ export async function middleware(req: NextRequest) {
       req.nextUrl.pathname.startsWith('/dashboard') ||
       req.nextUrl.pathname.startsWith('/baddieupload') ||
       req.nextUrl.pathname.startsWith('/creatordash') ||
-      req.nextUrl.pathname.startsWith('/managecontent')
+      req.nextUrl.pathname.startsWith('/managecontent') ||
+      req.nextUrl.pathname.startsWith('/verification')
     )
   ) {
     console.log('Middleware - Redirecting to signin from:', req.nextUrl.pathname)
@@ -42,6 +43,7 @@ export const config = {
     '/baddieupload/:path*',
     '/creatordash/:path*',
     '/managecontent/:path*',
+    '/verification/:path*',
     '/auth/:path*'
   ],
 } 

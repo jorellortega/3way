@@ -46,6 +46,9 @@ export default function RootLayout({
                     <p className="text-sm text-gray-400">© 2025 Paradise Baddies. All rights reserved.</p>
                   </div>
                   <nav className="flex gap-4 sm:gap-6">
+                    <Link className="text-sm hover:underline" href="/about">
+                      About
+                    </Link>
                     <Link className="text-sm hover:underline" href="/terms">
                       Terms
                     </Link>

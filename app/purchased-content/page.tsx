@@ -498,3 +498,4 @@ export default function PurchasedContentPage() {
     </div>
   )
 }
+

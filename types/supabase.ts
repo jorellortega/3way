@@ -20,7 +20,9 @@ export interface Database {
           updated_at: string
           profile_image: string | null
           bio: string | null
+          creator_name: string | null
           is_verified: boolean
+          account_status: 'good_standing' | 'paused' | 'hold' | 'blocked'
           last_login: string | null
         }
         Insert: {
@@ -33,7 +35,9 @@ export interface Database {
           updated_at?: string
           profile_image?: string | null
           bio?: string | null
+          creator_name?: string | null
           is_verified?: boolean
+          account_status?: 'good_standing' | 'paused' | 'hold' | 'blocked'
           last_login?: string | null
         }
         Update: {
@@ -46,8 +50,66 @@ export interface Database {
           updated_at?: string
           profile_image?: string | null
           bio?: string | null
+          creator_name?: string | null
           is_verified?: boolean
+          account_status?: 'good_standing' | 'paused' | 'hold' | 'blocked'
           last_login?: string | null
+        }
+      }
+      onboarding_progress: {
+        Row: {
+          id: string
+          user_id: string
+          identity_status: 'pending' | 'submitted' | 'under_review' | 'approved' | 'rejected' | 'resubmit_required'
+          identity_document_url: string | null
+          identity_submitted_at: string | null
+          identity_reviewed_at: string | null
+          identity_review_notes: string | null
+          payments_setup: boolean
+          payments_setup_at: string | null
+          payments_provider: string | null
+          payments_account_id: string | null
+          terms_accepted: boolean
+          terms_accepted_at: string | null
+          terms_version: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          identity_status?: 'pending' | 'submitted' | 'under_review' | 'approved' | 'rejected' | 'resubmit_required'
+          identity_document_url?: string | null
+          identity_submitted_at?: string | null
+          identity_reviewed_at?: string | null
+          identity_review_notes?: string | null
+          payments_setup?: boolean
+          payments_setup_at?: string | null
+          payments_provider?: string | null
+          payments_account_id?: string | null
+          terms_accepted?: boolean
+          terms_accepted_at?: string | null
+          terms_version?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          identity_status?: 'pending' | 'submitted' | 'under_review' | 'approved' | 'rejected' | 'resubmit_required'
+          identity_document_url?: string | null
+          identity_submitted_at?: string | null
+          identity_reviewed_at?: string | null
+          identity_review_notes?: string | null
+          payments_setup?: boolean
+          payments_setup_at?: string | null
+          payments_provider?: string | null
+          payments_account_id?: string | null
+          terms_accepted?: boolean
+          terms_accepted_at?: string | null
+          terms_version?: string | null
+          created_at?: string
+          updated_at?: string
         }
       }
       content: {

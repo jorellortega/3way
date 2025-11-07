@@ -77,7 +77,7 @@ export default function NavBar() {
                 </Button>
               </Link>
               <Link href="/auth/signup">
-                <Button size="sm" variant="outline" className="ml-2 text-purple-200 border-purple-600">
+                <Button size="sm" className="ml-2 bg-paradiseGold hover:bg-paradiseGold/90 text-paradiseBlack font-semibold border-2 border-paradiseGold">
                   Sign Up
                 </Button>
               </Link>
