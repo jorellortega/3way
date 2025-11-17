@@ -49,6 +49,7 @@ export default function Home() {
   const [logoUrl, setLogoUrl] = useState<string | null>(null)
   const [featuredContent, setFeaturedContent] = useState<Content[]>([])
   const [eliteCreators, setEliteCreators] = useState<Creator[]>([])
+  const [homepageImages, setHomepageImages] = useState<Array<{ id: number; image_url: string; alt_text: string | null; position: number }>>([])
   const [supabase] = useState(() => createClientComponentClient<Database>())
 
   useEffect(() => {
@@ -116,6 +117,18 @@ export default function Home() {
       }
     }
     fetchEliteCreators()
+    
+    // Fetch homepage hero images
+    const fetchHomepageImages = async () => {
+      const { data } = await supabase
+        .from("homepage_images")
+        .select("id, image_url, alt_text, position")
+        .eq("is_active", true)
+        .order("position", { ascending: true })
+        .limit(4)
+      setHomepageImages(data || [])
+    }
+    fetchHomepageImages()
   }, [supabase])
 
   return (
@@ -127,7 +140,7 @@ export default function Home() {
           <div className="grid gap-6 lg:grid-cols-[1fr_400px] lg:gap-12 xl:grid-cols-[1fr_600px]">
             <div className="flex flex-col items-start space-y-4 pt-4">
               <div className="flex items-start mb-2">
-                <div className="w-56 h-56 rounded-full bg-white/30 flex items-center justify-center overflow-hidden mr-6">
+                <div className="w-56 h-56 rounded-full bg-transparent flex items-center justify-center overflow-hidden mr-6">
                   {logoUrl ? (
                     <Image src={logoUrl} alt="Logo" width={224} height={224} />
                   ) : (
@@ -163,46 +176,101 @@ export default function Home() {
             </div>
             <div className="relative hidden lg:block">
               <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-4">
-                  <div className="overflow-hidden rounded-lg border border-paradiseGold/30 shadow-[0_0_15px_rgba(249,200,70,0.15)]">
-                    <Image
-                      src="/placeholder.svg?height=400&width=300"
-                      width={300}
-                      height={400}
-                      alt="Premium content preview"
-                      className="aspect-[3/4] object-cover"
-                    />
+                {homepageImages.length > 0 ? (
+                  <>
+                    <div className="space-y-4">
+                      {homepageImages[0] && (
+                        <div className="overflow-hidden rounded-lg border border-paradiseGold/30 shadow-[0_0_15px_rgba(249,200,70,0.15)]">
+                          <Image
+                            src={supabase.storage.from('files').getPublicUrl(homepageImages[0].image_url).data.publicUrl}
+                            width={300}
+                            height={400}
+                            alt={homepageImages[0].alt_text || "Premium content preview"}
+                            className="aspect-[3/4] object-cover"
+                          />
+                        </div>
+                      )}
+                      {homepageImages[1] && (
+                        <div className="overflow-hidden rounded-lg border border-paradiseGold/30 shadow-[0_0_15px_rgba(249,200,70,0.15)]">
+                          <Image
+                            src={supabase.storage.from('files').getPublicUrl(homepageImages[1].image_url).data.publicUrl}
+                            width={300}
+                            height={300}
+                            alt={homepageImages[1].alt_text || "Premium content preview"}
+                            className="aspect-square object-cover"
+                          />
+                        </div>
+                      )}
+                    </div>
+                    <div className="mt-8 space-y-4">
+                      {homepageImages[2] && (
+                        <div className="overflow-hidden rounded-lg border border-paradiseGold/30 shadow-[0_0_15px_rgba(249,200,70,0.15)]">
+                          <Image
+                            src={supabase.storage.from('files').getPublicUrl(homepageImages[2].image_url).data.publicUrl}
+                            width={300}
+                            height={300}
+                            alt={homepageImages[2].alt_text || "Premium content preview"}
+                            className="aspect-square object-cover"
+                          />
+                        </div>
+                      )}
+                      {homepageImages[3] && (
+                        <div className="overflow-hidden rounded-lg border border-paradiseGold/30 shadow-[0_0_15px_rgba(249,200,70,0.15)]">
+                          <Image
+                            src={supabase.storage.from('files').getPublicUrl(homepageImages[3].image_url).data.publicUrl}
+                            width={300}
+                            height={400}
+                            alt={homepageImages[3].alt_text || "Premium content preview"}
+                            className="aspect-[3/4] object-cover"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </>
+                ) : (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-4">
+                      <div className="overflow-hidden rounded-lg border border-paradiseGold/30 shadow-[0_0_15px_rgba(249,200,70,0.15)]">
+                        <Image
+                          src="/placeholder.svg?height=400&width=300"
+                          width={300}
+                          height={400}
+                          alt="Premium content preview"
+                          className="aspect-[3/4] object-cover"
+                        />
+                      </div>
+                      <div className="overflow-hidden rounded-lg border border-paradiseGold/30 shadow-[0_0_15px_rgba(249,200,70,0.15)]">
+                        <Image
+                          src="/placeholder.svg?height=300&width=300"
+                          width={300}
+                          height={300}
+                          alt="Premium content preview"
+                          className="aspect-square object-cover"
+                        />
+                      </div>
+                    </div>
+                    <div className="mt-8 space-y-4">
+                      <div className="overflow-hidden rounded-lg border border-paradiseGold/30 shadow-[0_0_15px_rgba(249,200,70,0.15)]">
+                        <Image
+                          src="/placeholder.svg?height=300&width=300"
+                          width={300}
+                          height={300}
+                          alt="Premium content preview"
+                          className="aspect-square object-cover"
+                        />
+                      </div>
+                      <div className="overflow-hidden rounded-lg border border-paradiseGold/30 shadow-[0_0_15px_rgba(249,200,70,0.15)]">
+                        <Image
+                          src="/placeholder.svg?height=400&width=300"
+                          width={300}
+                          height={400}
+                          alt="Premium content preview"
+                          className="aspect-[3/4] object-cover"
+                        />
+                      </div>
+                    </div>
                   </div>
-                  <div className="overflow-hidden rounded-lg border border-paradiseGold/30 shadow-[0_0_15px_rgba(249,200,70,0.15)]">
-                    <Image
-                      src="/placeholder.svg?height=300&width=300"
-                      width={300}
-                      height={300}
-                      alt="Premium content preview"
-                      className="aspect-square object-cover"
-                    />
-                  </div>
-                </div>
-                <div className="mt-8 space-y-4">
-                  <div className="overflow-hidden rounded-lg border border-paradiseGold/30 shadow-[0_0_15px_rgba(249,200,70,0.15)]">
-                    <Image
-                      src="/placeholder.svg?height=300&width=300"
-                      width={300}
-                      height={300}
-                      alt="Premium content preview"
-                      className="aspect-square object-cover"
-                    />
-                  </div>
-                  <div className="overflow-hidden rounded-lg border border-paradiseGold/30 shadow-[0_0_15px_rgba(249,200,70,0.15)]">
-                    <Image
-                      src="/placeholder.svg?height=400&width=300"
-                      width={300}
-                      height={400}
-                      alt="Premium content preview"
-                      className="aspect-[3/4] object-cover"
-                    />
-                  </div>
-                </div>
+                )}
               </div>
             </div>
           </div>

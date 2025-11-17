@@ -41,6 +41,8 @@ export const useAuth = () => {
           data: {
             first_name: userData.first_name,
             last_name: userData.last_name,
+            role: userData.role || 'user',
+            phone: userData.phone || null,
           }
         }
       })
@@ -71,7 +73,8 @@ export const useAuth = () => {
           .update({
               first_name: userData.first_name,
               last_name: userData.last_name,
-              role: 'user',
+              role: userData.role || 'user',
+              phone: userData.phone || null,
           })
           .eq('id', data.user.id)
 

@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 export default function SignUpPage() {
   const { signUp } = useAuth()
@@ -15,7 +16,9 @@ export default function SignUpPage() {
   const [firstName, setFirstName] = useState("")
   const [lastName, setLastName] = useState("")
   const [email, setEmail] = useState("")
+  const [phone, setPhone] = useState("")
   const [password, setPassword] = useState("")
+  const [role, setRole] = useState<"user" | "creator">("user")
   const [agree, setAgree] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
@@ -33,6 +36,8 @@ export default function SignUpPage() {
     const { data, error } = await signUp(email, password, {
       first_name: firstName,
       last_name: lastName,
+      role: role,
+      phone: phone,
     })
     setLoading(false)
     if (error) {
@@ -58,6 +63,24 @@ export default function SignUpPage() {
             </div>
             <h1 className="text-2xl font-bold text-white">Create an account</h1>
             <p className="text-sm text-purple-200">Enter your details to create your account</p>
+          </div>
+          <div className="w-full">
+            <Tabs value={role} onValueChange={(value) => setRole(value as "user" | "creator")} className="w-full">
+              <TabsList className="grid w-full grid-cols-2 bg-gray-900/50 border border-purple-700">
+                <TabsTrigger 
+                  value="user" 
+                  className="data-[state=active]:bg-purple-600 data-[state=active]:text-white text-purple-200"
+                >
+                  User
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="creator" 
+                  className="data-[state=active]:bg-purple-600 data-[state=active]:text-white text-purple-200"
+                >
+                  Creator
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
           </div>
           <form className="grid gap-4" onSubmit={handleSubmit}>
             <div className="grid grid-cols-2 gap-4">
@@ -109,6 +132,22 @@ export default function SignUpPage() {
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 required
+              />
+            </div>
+            <div className="grid gap-2">
+              <label className="text-sm font-medium text-purple-100" htmlFor="phone">
+                Phone Number
+              </label>
+              <Input
+                className="border-purple-700 bg-gray-900 text-white placeholder:text-purple-300 focus-visible:ring-purple-500"
+                id="phone"
+                placeholder="+1 (555) 123-4567"
+                type="tel"
+                autoCapitalize="none"
+                autoComplete="tel"
+                autoCorrect="off"
+                value={phone}
+                onChange={e => setPhone(e.target.value)}
               />
             </div>
             <div className="grid gap-2">
